@@ -1,4 +1,4 @@
-{:source-paths ["src"]
+{:source-paths ["src" "test"]
 
  :dependencies [[no.cjohansen/replicant "2026.07.1"]]
 

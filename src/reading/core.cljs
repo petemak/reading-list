@@ -1,11 +1,13 @@
 (ns reading.core
-  (:require [reading.ui :as ui]
+  (:require [replicant.dom :as r]
+            [reading.ui :as ui]
             [reading.state :as state]
-            [replicant.dom :as r]))
+            [reading.actions :as actions]))
 
 ;; The one atom. defonce keeps its value across hot reloads.
 (defonce store (atom state/initial-state))
 
+;;
 (defn render!
   [state]
   (r/render (js/document.getElementById "app")
@@ -17,9 +19,16 @@
   (render! @store))
 
 ;; The smallest possible Replicant program: one call to render.
-(defn init []
+(defn init
+  []
+  (r/set-dispatch!
+   (fn [{:replicant/keys [trigger dom-event]} action-data]
+     (when (= trigger :replicant.trigger/dom-event)
+       (actions/handle! store dom-event action-data))))
+
   (add-watch store
-            ::render
-            (fn [_ _ _ new-state]
-              (render! new-state)))
+             ::render
+             (fn [_ _ _ new-state]
+               (render! new-state)))
+  
   (render! @store))
