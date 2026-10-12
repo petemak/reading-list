@@ -18,8 +18,18 @@
   (case action
     :action/prevent-default (.preventDefault event)
     :action/assoc-in (let [[path value] args]
-                       (swap! store assoc-in path value))
-    :action/add-book (swap! store state/add-book)
+                       (swap! store
+                              assoc-in
+                              path
+                              value))
+    :action/add-book (swap! store
+                            state/add-book)
+    :action/toggle-read (swap! store
+                               state/toggle-read
+                               (first args))
+    :action/remove-book (swap! store
+                               state/remove-book
+                               (first args))
 
     (js/console.warn "Unknown action: " (pr-str action))))
 
