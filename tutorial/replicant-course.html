@@ -1,0 +1,2090 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Replicant, from an empty folder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF2F4; --panel:#F8FAFB; --ink:#16202E; --muted:#556275;
+  --data:#3B7A36; --data-soft:#DCEBD8; --dom:#2F5FD0; --dom-soft:#DCE5FA;
+  --line:#C9D2DB; --code:#E3E9EE; --kw:#2F5FD0; --str:#3B7A36; --cmt:#7A8696;
+  --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#141B24; --panel:#1A232F; --ink:#E4E9EF; --muted:#9AA7B8;
+    --data:#8CC47E; --data-soft:#233522; --dom:#86A8F5; --dom-soft:#1F2C4A;
+    --line:#2E3A49; --code:#1D2632; --kw:#86A8F5; --str:#8CC47E; --cmt:#7C889A;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141B24; --panel:#1A232F; --ink:#E4E9EF; --muted:#9AA7B8;
+  --data:#8CC47E; --data-soft:#233522; --dom:#86A8F5; --dom-soft:#1F2C4A;
+  --line:#2E3A49; --code:#1D2632; --kw:#86A8F5; --str:#8CC47E; --cmt:#7C889A;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 1rem);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:1.0625rem;line-height:1.6}
+a{color:var(--dom)}
+:focus-visible{outline:3px solid var(--dom);outline-offset:2px;border-radius:4px}
+code{font-family:var(--mono);font-size:.88em;background:var(--code);padding:.08em .35em;border-radius:4px}
+
+/* ---------- layout ---------- */
+.shell{display:grid;grid-template-columns:17rem minmax(0,1fr);max-width:78rem;margin:0 auto}
+aside.toc{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;height:100vh;height:100dvh;overflow:auto;padding:2rem 1.25rem 2rem 1.5rem;border-right:1px solid var(--line)}
+main{padding:2.5rem clamp(1rem,4vw,3.5rem) 6rem;min-width:0}
+.prose{max-width:44rem}
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  aside.toc{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}
+}
+
+/* ---------- sidebar ---------- */
+.toc .brand{font-weight:800;font-size:1.05rem;margin:0 0 1.25rem}
+.toc h2{font-size:.9rem;font-weight:600;color:var(--muted);margin:1.5rem 0 .4rem}
+.toc ol,.toc ul{list-style:none;margin:0;padding:0}
+.toc li a{display:flex;gap:.55rem;align-items:baseline;text-decoration:none;color:var(--ink);padding:.22rem .4rem;border-radius:6px;font-size:.93rem;line-height:1.35}
+.toc li a:hover{background:var(--code)}
+.toc .n{font-family:var(--mono);font-size:.78rem;color:var(--muted);min-width:1.4rem}
+.toc li.done a{color:var(--muted)}
+.toc li.done .n{color:var(--data)}
+.meter{margin-top:.25rem}
+.meter-bar{height:8px;background:var(--code);border-radius:99px;overflow:hidden}
+.meter-bar span{display:block;height:100%;width:0;background:var(--data);transition:width .3s}
+.meter p{margin:.45rem 0 0;font-size:.88rem;color:var(--muted)}
+.linkbtn{background:none;border:0;padding:0;color:var(--dom);font:inherit;font-size:.85rem;cursor:pointer;text-decoration:underline}
+
+/* ---------- hero ---------- */
+.hero h1{font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.05;letter-spacing:-.02em;font-weight:800;margin:0 0 1rem;max-width:16ch}
+.hero .lede{font-size:1.2rem;color:var(--muted);max-width:40rem;margin:0 0 2rem}
+.demo{border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden}
+.demo-controls{display:flex;flex-wrap:wrap;gap:.5rem;padding:.9rem 1rem;border-bottom:1px solid var(--line);align-items:center}
+.demo-controls .hint{margin-left:auto;font-size:.9rem;color:var(--muted)}
+.btn{font:inherit;font-size:.95rem;font-weight:600;padding:.45rem .9rem;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--dom)}
+.btn.primary{background:var(--dom);border-color:var(--dom);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#0f1622}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primary{color:#0f1622}}
+.panes{display:grid;grid-template-columns:1fr 1.3fr 1fr}
+@media (max-width:980px){.panes{grid-template-columns:1fr}}
+.pane{padding:1rem;min-width:0;border-right:1px solid var(--line)}
+.pane:last-child{border-right:0}
+@media (max-width:980px){.pane{border-right:0;border-bottom:1px solid var(--line)}.pane:last-child{border-bottom:0}}
+.pane h3{margin:0 0 .6rem;font-size:1rem;display:flex;align-items:center;gap:.5rem}
+.swatch{width:.7rem;height:.7rem;border-radius:3px;display:inline-block}
+.pane pre{margin:0;font-family:var(--mono);font-size:.8rem;line-height:1.55;white-space:pre;overflow-x:auto}
+.pane.state h3 .swatch{background:var(--muted)}
+.pane.hic h3 .swatch{background:var(--data)}
+.pane.dom h3 .swatch{background:var(--dom)}
+.arrow{color:var(--muted);font-weight:400;font-size:.9rem}
+.live{list-style:none;margin:0;padding:0;border:1px dashed var(--line);border-radius:10px;min-height:4rem}
+.live li{padding:.5rem .75rem;border-bottom:1px solid var(--line);border-radius:6px}
+.live li:last-child{border-bottom:0}
+.live li.read{text-decoration:line-through;color:var(--muted)}
+.live li.touched{background:var(--dom-soft);box-shadow:inset 3px 0 0 var(--dom)}
+@media (prefers-reduced-motion:no-preference){.live li.touched{animation:fade 1.6s ease-out forwards}}
+@keyframes fade{0%{background:var(--dom-soft);box-shadow:inset 3px 0 0 var(--dom)}70%{background:var(--dom-soft)}100%{background:transparent;box-shadow:inset 3px 0 0 transparent}}
+.report{margin:.75rem 0 0;font-size:.9rem;color:var(--muted)}
+.report strong{color:var(--dom)}
+
+/* ---------- sections ---------- */
+section{margin-top:4.5rem}
+.part{font-size:clamp(1.7rem,3.2vw,2.3rem);font-weight:800;letter-spacing:-.01em;line-height:1.15;margin:5rem 0 .5rem}
+.part + p{color:var(--muted);font-size:1.1rem;max-width:42rem}
+h2.concept{font-size:1.45rem;font-weight:800;margin:0 0 .75rem}
+h3{font-size:1.1rem;margin:1.75rem 0 .5rem}
+p{margin:0 0 1rem}
+ul.plain{padding-left:1.2rem;margin:0 0 1rem}
+ul.plain li{margin-bottom:.35rem}
+.note{border-left:4px solid var(--dom);background:var(--dom-soft);padding:.8rem 1rem;border-radius:0 10px 10px 0;margin:1.25rem 0}
+.note.good{border-color:var(--data);background:var(--data-soft)}
+.note p:last-child{margin-bottom:0}
+
+table.map{border-collapse:collapse;width:100%;font-size:.92rem;margin:1rem 0 1.5rem}
+.tablewrap{overflow-x:auto}
+table.map th,table.map td{text-align:left;padding:.5rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+table.map th{font-weight:600;color:var(--muted)}
+table.map td code{white-space:nowrap}
+
+/* ---------- steps ---------- */
+.step{border-top:2px solid var(--ink);padding-top:1.1rem;margin-top:3.5rem}
+.step-head{display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap}
+.step-num{font-family:var(--mono);font-weight:600;font-size:1.05rem;color:var(--muted)}
+.step-head h2{font-size:1.4rem;font-weight:800;margin:0;flex:1;min-width:12rem}
+.done-toggle{display:inline-flex;align-items:center;gap:.5rem;font-size:.95rem;font-weight:600;cursor:pointer;user-select:none;padding:.35rem .75rem;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+.done-toggle input{width:1.05rem;height:1.05rem;accent-color:var(--data);margin:0}
+.step.is-done{border-top-color:var(--data)}
+.step.is-done .step-num{color:var(--data)}
+.step.is-done .done-toggle{border-color:var(--data);color:var(--data)}
+.step .goal{color:var(--muted);margin:.5rem 0 1.25rem}
+
+/* ---------- code ---------- */
+figure.code{margin:1rem 0 1.5rem;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--code)}
+figure.code figcaption{display:flex;justify-content:space-between;align-items:center;padding:.4rem .5rem .4rem .9rem;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:.8rem;color:var(--muted);background:var(--panel)}
+figure.code pre{margin:0;padding:.9rem 1rem;overflow-x:auto;font-family:var(--mono);font-size:.84rem;line-height:1.6;tab-size:2}
+.copy{font:inherit;font-family:var(--sans);font-size:.82rem;font-weight:600;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:6px;padding:.2rem .6rem;cursor:pointer}
+.tk-k{color:var(--kw)}
+.tk-s{color:var(--str)}
+.tk-c{color:var(--cmt);font-style:italic}
+.tk-p{color:var(--muted)}
+.badge{display:inline-block;font-family:var(--sans);font-size:.74rem;font-weight:600;letter-spacing:.01em;padding:.08rem .5rem;border-radius:99px;border:1px solid;white-space:nowrap;vertical-align:.08em}
+.badge.new{color:var(--data);border-color:var(--data);background:var(--data-soft)}
+.badge.replace{color:var(--dom);border-color:var(--dom);background:var(--dom-soft)}
+.badge.run,.badge.repl{color:var(--muted);border-color:var(--line);background:var(--paper)}
+figure.code figcaption .cap{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;min-width:0}
+figure.code figcaption .path{color:var(--ink);font-weight:600;overflow-wrap:anywhere}
+.checkpoint{border:1px solid var(--data);border-radius:10px;padding:.85rem 1rem;margin:1.5rem 0 0;background:var(--data-soft)}
+.checkpoint p{margin:0 0 .4rem}
+.checkpoint p:last-child{margin:.4rem 0 0}
+.checkpoint ul{margin:0;padding-left:1.2rem}
+.checkpoint li{margin:.1rem 0}
+details.full{margin:1rem 0}
+details.full summary{cursor:pointer;font-weight:600;color:var(--dom)}
+.trouble dt{font-weight:600;margin-top:1rem}
+.trouble dd{margin:.25rem 0 0 0;color:var(--ink)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--line);color:var(--muted);font-size:.92rem}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="toc" aria-label="Course contents">
+  <p class="brand">Replicant course</p>
+  <div class="meter" aria-live="polite">
+    <div class="meter-bar"><span id="meterFill"></span></div>
+    <p id="meterText">0 of 15 steps done</p>
+    <button class="linkbtn" id="resetBtn" type="button">Clear my progress</button>
+  </div>
+  <h2>Part 1: How it works</h2>
+  <ul>
+    <li><a href="#idea">The one idea</a></li>
+    <li><a href="#hiccup">Hiccup in ten minutes</a></li>
+    <li><a href="#hiccup-deep">Hiccup in depth: vectors, maps and CSS</a></li>
+    <li><a href="#render">What render actually does</a></li>
+    <li><a href="#events">Events as data</a></li>
+    <li><a href="#keys">Keys for lists</a></li>
+    <li><a href="#hooks">Life-cycle hooks</a></li>
+    <li><a href="#aliases">Aliases</a></li>
+    <li><a href="#strings">Rendering to strings</a></li>
+    <li><a href="#leaves-out">What it leaves out</a></li>
+  </ul>
+  <h2>Part 2: Build it</h2>
+  <ol id="tocSteps"></ol>
+  <h2>After</h2>
+  <ul>
+    <li><a href="#trouble">When something breaks</a></li>
+    <li><a href="#next">Where to go next</a></li>
+  </ul>
+</aside>
+
+<main>
+<div class="prose hero">
+  <h1>Replicant, from an empty folder</h1>
+  <p class="lede">Replicant turns plain Clojure data into a web page, and turns new data into just the changes that page needs. Play with the box below first. Everything else in this course explains what you just watched.</p>
+</div>
+
+<div class="demo" role="region" aria-label="Live demonstration of state to hiccup to DOM">
+  <div class="demo-controls">
+    <button class="btn primary" id="dAdd" type="button">Add a book</button>
+    <button class="btn" id="dToggle" type="button">Toggle the first book</button>
+    <button class="btn" id="dRemove" type="button">Remove the last book</button>
+    <span class="hint">Blue flash = a DOM node Replicant had to touch</span>
+  </div>
+  <div class="panes">
+    <div class="pane state"><h3><span class="swatch"></span>1. Your state <span class="arrow">(a map)</span></h3><pre id="dState"></pre></div>
+    <div class="pane hic"><h3><span class="swatch"></span>2. Your function returns hiccup <span class="arrow">(data)</span></h3><pre id="dHic"></pre></div>
+    <div class="pane dom"><h3><span class="swatch"></span>3. Replicant updates the page</h3><ul class="live" id="dDom"></ul><p class="report" id="dReport"></p></div>
+  </div>
+</div>
+
+<!-- ================= PART 1 ================= -->
+<div class="prose">
+<h1 class="part" id="part1">Part 1: How Replicant works</h1>
+<p>Ten short ideas. Read them once, then build. You will meet every one of them again in Part 2.</p>
+
+<section id="idea">
+<h2 class="concept">The one idea</h2>
+<p>Your whole user interface is a <em>function of your state</em>. You write one ordinary Clojure function. It takes a map describing everything the app knows and returns a description of the entire page as data. Whenever the state changes, you call the function again and hand the new description to Replicant.</p>
+<p>Replicant remembers the previous description, compares it to the new one, and makes only the DOM changes needed to get from one to the other. That comparing step is called <em>reconciliation</em>, and it is the whole job of the library.</p>
+<div class="note good"><p>The consequence for you: your view code has no state, no subscriptions and no side effects. It is a pure function you can call in a REPL and inspect like any other data. That is the part that makes Replicant pleasant.</p></div>
+</section>
+
+<section id="hiccup">
+<h2 class="concept">Hiccup in ten minutes</h2>
+<p>The "description of the page" is <em>hiccup</em>: HTML written as Clojure vectors. A vector's first item is a keyword naming the tag. An optional map of attributes can come next. Everything after that is children.</p>
+<div class="tablewrap"><table class="map">
+<thead><tr><th>Hiccup</th><th>HTML it becomes</th></tr></thead>
+<tbody>
+<tr><td><code>[:p "Hi"]</code></td><td><code>&lt;p&gt;Hi&lt;/p&gt;</code></td></tr>
+<tr><td><code>[:a {:href "/about"} "About"]</code></td><td><code>&lt;a href="/about"&gt;About&lt;/a&gt;</code></td></tr>
+<tr><td><code>[:div.card#main "x"]</code></td><td><code>&lt;div class="card" id="main"&gt;x&lt;/div&gt;</code></td></tr>
+<tr><td><code>[:div {:class ["a" "b"]}]</code></td><td><code>&lt;div class="a b"&gt;&lt;/div&gt;</code></td></tr>
+<tr><td><code>[:p {:style {:color "red"}} "!"]</code></td><td><code>&lt;p style="color: red"&gt;!&lt;/p&gt;</code></td></tr>
+<tr><td><code>[:ul (for [x xs] [:li x])]</code></td><td>one <code>&lt;li&gt;</code> per item</td></tr>
+<tr><td><code>[:div nil "shown"]</code></td><td><code>nil</code> children are skipped</td></tr>
+</tbody></table></div>
+<p>Because it is just vectors and maps, you build hiccup with the tools you already know: <code>for</code>, <code>map</code>, <code>when</code>, <code>if</code>, <code>let</code>, and small functions that return vectors.</p>
+<div class="note"><p><strong>One rule that trips people up.</strong> Don't make the attribute map itself conditional, as in <code>[:div (when x {:class "a"}) "text"]</code>. Always pass a map and make the values conditional instead: <code>[:div {:class (when x "a")} "text"]</code>. Replicant warns about this in development.</p></div>
+</section>
+
+<section id="hiccup-deep">
+<h2 class="concept">Hiccup in depth: vectors, maps and CSS</h2>
+<p>Hiccup has one shape, and everything else is a variation on it:</p>
+<script type="text/plain" class="snippet" data-lang="clj">[tag  attributes?  & children]</script>
+<p>A vector is one HTML element. Its first item is always a keyword naming the tag. If the second item is a map, it holds the element's attributes. Everything after that is the element's content.</p>
+
+<h3>The tag keyword</h3>
+<p>The keyword is the tag name. You can also attach classes and an id with CSS-selector shorthand:</p>
+<script type="text/plain" class="snippet" data-lang="clj">[:p "Hello"]                 ;; <p>Hello</p>
+[:main.app "..."]            ;; <main class="app">...</main>
+[:ul.books.compact]          ;; <ul class="books compact"></ul>
+[:div.card#main "x"]         ;; <div class="card" id="main">x</div></script>
+<p>The shorthand deliberately looks like the CSS selector that would target that element. <code>.books</code> in your stylesheet matches <code>[:ul.books]</code> in hiccup.</p>
+
+<h3>The attribute map</h3>
+<p>Each key becomes an attribute name and each value becomes its value:</p>
+<script type="text/plain" class="snippet" data-lang="clj">[:a {:href "/about" :title "About us"} "About"]
+;; <a href="/about" title="About us">About</a>
+
+[:input {:type "text" :placeholder "Add a book title"}]
+;; <input type="text" placeholder="Add a book title"></script>
+<p>A few values get special treatment:</p>
+<div class="tablewrap"><table class="map">
+<thead><tr><th>Key or value</th><th>What happens</th></tr></thead>
+<tbody>
+<tr><td><code>true</code> / <code>false</code></td><td><code>{:checked true}</code> sets the attribute, while <code>false</code> or <code>nil</code> leaves it off. That's why <code>:checked (:read? book)</code> works directly in step 9.</td></tr>
+<tr><td><code>nil</code> values</td><td>Any attribute whose value is <code>nil</code> is simply omitted. That makes <code>{:class (when (:read? book) "read")}</code> clean: unread books get no class at all.</td></tr>
+<tr><td><code>:class</code></td><td>This can be a string, or a collection that Replicant joins with spaces. Collections are handy for combining conditional classes: <code>{:class ["book" (when read? "read")]}</code>. The <code>nil</code> gets dropped. Classes from the tag shorthand and from <code>:class</code> are merged.</td></tr>
+<tr><td><code>:style</code></td><td>This takes a map, not a CSS string (see below).</td></tr>
+<tr><td><code>:on</code></td><td>Event handlers, as covered in <a href="#events">Events as data</a>.</td></tr>
+<tr><td><code>:replicant/...</code></td><td>Instructions to Replicant, like <code>:replicant/key</code> and <code>:replicant/on-mount</code>. They never appear in the HTML.</td></tr>
+</tbody></table></div>
+
+<h3>Children</h3>
+<p>Anything after the tag (and the attribute map, if there is one) is content:</p>
+<script type="text/plain" class="snippet" data-lang="clj">[:li
+ [:span "Kindred"]      ;; a nested vector is a child element
+ " "                    ;; strings become text (and are HTML-escaped)
+ 42                     ;; numbers become text
+ nil                    ;; nil is skipped entirely
+ (list [:em "a"] [:em "b"])]   ;; seqs are spliced in as siblings</script>
+<p>Seqs being spliced in is what makes <code>(map book-item books)</code> and <code>for</code> work. They return a seq of vectors, and each vector becomes a sibling <code>&lt;li&gt;</code>. Nesting vectors inside vectors mirrors nesting tags inside tags, so the indentation of your hiccup reads like the indentation of the HTML.</p>
+
+<h3>Inline styles: the <code>:style</code> map</h3>
+<p>HTML's <code>style="..."</code> string becomes a Clojure map. Its keys are the CSS property names as keywords, in the same kebab-case CSS uses:</p>
+<script type="text/plain" class="snippet" data-lang="clj">[:div {:style {:background-color "#2f5fd0"
+               :padding "0.5rem 1rem"
+               :border-radius "8px"}}
+ "Hi"]
+;; <div style="background-color: #2f5fd0; padding: 0.5rem 1rem; border-radius: 8px">Hi</div></script>
+<p>I'd write values as strings with explicit units, like <code>"8px"</code>. That way you never have to guess how a bare number will be interpreted.</p>
+<p>Because it's a map, style can be computed like any other data:</p>
+<script type="text/plain" class="snippet" data-lang="clj">(defn progress-bar [done total]
+  [:div.bar
+   [:div.fill {:style {:width (str (* 100 (/ done total)) "%")}}]])</script>
+
+<h3>Where CSS styling actually lives</h3>
+<p>Hiccup describes elements, not stylesheets. There is no hiccup form for a CSS rule like <code>.books li.read span { ... }</code>. Styling is split into two jobs:</p>
+<ul class="plain">
+<li><strong>Your CSS file (or <code>&lt;style&gt;</code> block) defines what things look like</strong>, using selectors, just as in plain HTML. In the tutorial, that's the style block in <code>index.html</code> from step 4.</li>
+<li><strong>Your hiccup decides which elements match those selectors</strong>, by giving them tags, classes and ids based on state.</li>
+</ul>
+<p>Here's how the two line up in your reading list:</p>
+<script type="text/plain" class="snippet" data-lang="txt" data-file="excerpt: CSS rule">.books li.read span { text-decoration: line-through; opacity: .6; }</script>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="excerpt: hiccup">[:ul.books                                  ;; matches .books
+ [:li {:class (when (:read? book) "read")}  ;; matches li.read, only when read
+  [:label
+   [:input {:type "checkbox" ...}]
+   [:span (:title book)]]]]                 ;; matches span</script>
+<p>When you tick the checkbox, the state changes and <code>render-app</code> runs again. This time the <code>&lt;li&gt;</code> gets <code>class="read"</code>, so the CSS rule starts matching. Your Clojure code never touches a style; it only changes which class is present.</p>
+<div class="note good"><p>Prefer classes for anything a stylesheet can express, and keep <code>:style</code> for values that are truly computed at runtime, like the progress-bar width above.</p></div>
+
+<h3>One example, side by side</h3>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="hiccup">[:form.add {:on {:submit [[:action/add-book]]}}
+ [:input#title {:type "text"
+                :value (:draft state)
+                :style {:flex "1"}}]
+ [:button {:type "submit" :disabled (str/blank? (:draft state))}
+  "Add"]]</script>
+<script type="text/plain" class="snippet" data-lang="html" data-file="HTML it produces"><form class="add">
+  <input id="title" type="text" value="…" style="flex: 1">
+  <button type="submit" disabled>Add</button>
+</form></script>
+<p>The submit handler doesn't show up in the HTML, because Replicant attaches it as an event listener. The <code>disabled</code> attribute appears only while the draft is blank.</p>
+<div class="note"><p><strong>Try it.</strong> Call <code>(render-app @store)</code> in your REPL and read the output against what your browser's element inspector shows. The two will match node for node.</p></div>
+</section>
+
+<section id="render">
+<h2 class="concept">What <code>render</code> actually does</h2>
+<p>The main API is one function: <code>(replicant.dom/render element hiccup)</code>.</p>
+<ul class="plain">
+<li>The first time you call it on an element, Replicant builds DOM nodes from your hiccup and puts them inside that element.</li>
+<li>Every later call on the same element compares the new hiccup with the last hiccup it rendered there, then adds, changes or removes only the nodes that differ. Unchanged nodes are left exactly as they were, which is why focus and cursor position survive a re-render.</li>
+</ul>
+<p>So Replicant never asks you "what changed?". You always give it the whole page; it works out the difference. That is what the blue flashes in the demo at the top show.</p>
+</section>
+
+<section id="events">
+<h2 class="concept">Events as data</h2>
+<p>Event handlers live in an <code>:on</code> map, named after browser events. A plain function works:</p>
+<script type="text/plain" class="snippet" data-lang="clj">[:button {:on {:click (fn [e] (js/alert "Hi"))}} "Say hi"]</script>
+<p>But a function is not data. You can't print it, compare it or test it, and a fresh <code>fn</code> is created every render. Replicant's better option: put <em>data</em> in the handler slot, and register one global <em>dispatch</em> function that receives that data whenever the event fires.</p>
+<script type="text/plain" class="snippet" data-lang="clj">;; In the view: describe what should happen, as data
+[:button {:on {:click [[:action/remove-book 42]]}} "Remove"]
+
+;; Once, at startup: decide what that data means
+(r/set-dispatch!
+ (fn [event-data actions]
+   ;; event-data has :replicant/dom-event, :replicant/node, :replicant/trigger
+   ;; actions is exactly the vector you put in :on
+   (handle-actions actions)))</script>
+<p>Replicant gives the data no meaning of its own. The convention of "a vector of action vectors" used in this course comes from the Replicant docs, and you are free to design your own.</p>
+</section>
+
+<section id="keys">
+<h2 class="concept">Keys for lists</h2>
+<p>When you render a list and then remove the second item, how does Replicant know which <code>&lt;li&gt;</code> disappeared instead of assuming every item after it changed? You tell it, with <code>:replicant/key</code>:</p>
+<script type="text/plain" class="snippet" data-lang="clj">[:ul (for [book books]
+       [:li {:replicant/key (:id book)} (:title book)])]</script>
+<p>Use a stable, unique id from your data, never the position in the list.</p>
+</section>
+
+<section id="hooks">
+<h2 class="concept">Life-cycle hooks</h2>
+<p>Sometimes you need the real DOM node: to focus an input, measure something, or hand the node to a JavaScript charting library. Attach a hook as an attribute:</p>
+<ul class="plain">
+<li><code>:replicant/on-mount</code> runs when the node is first created.</li>
+<li><code>:replicant/on-update</code> runs when it changes.</li>
+<li><code>:replicant/on-unmount</code> runs when it is removed.</li>
+<li><code>:replicant/on-render</code> runs for all of the above.</li>
+</ul>
+<p>The hook receives a map containing <code>:replicant/node</code>, the actual DOM element. Hooks can be data too, in which case they go through your dispatch function. There are also <code>:replicant/mounting</code> and <code>:replicant/unmounting</code>, attribute overrides applied while a node enters or leaves, which make CSS fade-in and fade-out transitions declarative.</p>
+</section>
+
+<section id="aliases">
+<h2 class="concept">Aliases</h2>
+<p>Replicant deliberately has no components. What it has instead are <em>aliases</em>: your own tag names, written as namespaced keywords, that expand into ordinary hiccup.</p>
+<script type="text/plain" class="snippet" data-lang="clj">(ns reading.ui
+  (:require [replicant.alias :refer [defalias]]))
+
+(defalias progress [{::keys [done total]}]
+  [:div.progress
+   [:progress {:max total :value done}]
+   [:span (str done " of " total " read")]])
+
+;; elsewhere
+[ui/progress {::ui/done 2 ::ui/total 5}]</script>
+<p>An alias is stateless. It receives attributes and children and returns hiccup. Replicant only re-runs it when its arguments change, and during development it uses the alias to produce more helpful error messages.</p>
+</section>
+
+<section id="strings">
+<h2 class="concept">Rendering to strings</h2>
+<p><code>replicant.string/render</code> turns the same hiccup into an HTML string, on the JVM or in the browser. Put your view functions in <code>.cljc</code> files and you can render them on the server for the first page load or for static sites, then take over in the browser.</p>
+</section>
+
+<section id="leaves-out">
+<h2 class="concept">What it leaves out, on purpose</h2>
+<p>Replicant is a rendering library and nothing else. It has no state management, no router, no HTTP helpers and no component-local state. You bring an atom and a few functions. That sounds like more work, and for the first hour it is. After that it means every part of your app is plain Clojure you already understand.</p>
+</section>
+
+<!-- ================= PART 2 ================= -->
+<h1 class="part" id="part2">Part 2: Build a reading list</h1>
+<p>You will build a small app to track books you want to read: add titles, mark them read, filter, remove. Each step leaves you with something working. From step 8 on, each feature starts with a failing test. Tick each step off as you finish; your progress is saved in this browser.</p>
+<div class="note"><p><strong>How to read the code blocks.</strong> Every block's header names the file and says what to do with it:</p>
+<p><span class="badge new">New file</span> create this file with exactly this content. <span class="badge replace">Replace whole file</span> delete everything in the file and paste this in. <span class="badge run">Run</span> type this in the terminal pane named. <span class="badge repl">REPL</span> evaluate this in the ClojureScript REPL.</p>
+<p>From step 7 on, code is always given as complete files, never as fragments to splice in, so every <code>ns</code> form shows all the requires that file needs. Each step ends with a checkpoint listing the files it changed.</p></div>
+
+<div id="steps">
+
+<article class="step" data-step="1" id="step-1">
+  <div class="step-head"><span class="step-num">01</span><h2>Check your tools</h2></div>
+  <p class="goal">You need Java (to run the ClojureScript compiler) and Node.js (to run shadow-cljs, the build tool).</p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="terminal" data-action="run">java -version   # a recent JDK; 21 is a safe choice
+node -v         # 18 or newer
+npm -v</script>
+  <p>On Ubuntu, if Java is missing or old: <code>sudo apt install openjdk-21-jdk</code>. For Node, the version from <a href="https://nodejs.org">nodejs.org</a> or <code>nvm</code> is more current than the default apt package.</p>
+</article>
+
+<article class="step" data-step="2" id="step-2">
+  <div class="step-head"><span class="step-num">02</span><h2>Create the empty project</h2></div>
+  <p class="goal">A folder, a <code>package.json</code>, and shadow-cljs installed locally.</p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="terminal" data-action="run">mkdir reading-list
+cd reading-list
+npm init -y
+npm install --save-dev shadow-cljs
+mkdir -p src/reading public</script>
+  <p>Your folder now looks like this:</p>
+<script type="text/plain" class="snippet" data-lang="txt" data-file="layout">reading-list/
+  node_modules/
+  package.json
+  public/          ← HTML and compiled JS are served from here
+  src/reading/     ← your ClojureScript lives here</script>
+</article>
+
+<article class="step" data-step="3" id="step-3">
+  <div class="step-head"><span class="step-num">03</span><h2>Tell shadow-cljs about Replicant</h2></div>
+  <p class="goal">One config file: where the source is, which libraries to fetch, and what to build.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="shadow-cljs.edn" data-action="new">{:source-paths ["src"]
+
+ :dependencies [[no.cjohansen/replicant "2026.07.1"]]
+
+ ;; a tiny web server for development
+ :dev-http {8080 "public"}
+
+ :builds
+ {:app {:target :browser
+        :output-dir "public/js"
+        :asset-path "/js"
+        :modules {:main {:init-fn reading.core/init}}}}}</script>
+  <p><code>:init-fn</code> names the function shadow-cljs calls when the page loads. You will write <code>reading.core/init</code> in step 5. Replicant itself has zero dependencies, so this is the only library line you need.</p>
+</article>
+
+<article class="step" data-step="4" id="step-4">
+  <div class="step-head"><span class="step-num">04</span><h2>Write the HTML page</h2></div>
+  <p class="goal">An empty <code>div</code> for Replicant to render into, a script tag, and a little CSS.</p>
+<script type="text/plain" class="snippet" data-lang="html" data-file="public/index.html" data-action="new"><!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reading list</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f4f6f8; margin: 0; }
+    .app { max-width: 32rem; margin: 3rem auto; padding: 0 1rem; }
+    form { display: flex; gap: .5rem; }
+    input[type=text] { flex: 1; padding: .5rem; font: inherit; }
+    button { font: inherit; padding: .4rem .8rem; cursor: pointer; }
+    .filters { display: flex; gap: .25rem; margin: 1rem 0; }
+    .filters .active { background: #2f5fd0; color: white; }
+    .books { list-style: none; padding: 0; }
+    .books li { display: flex; justify-content: space-between;
+                padding: .5rem 0; border-bottom: 1px solid #dde3e8; }
+    .books li.read span { text-decoration: line-through; opacity: .6; }
+    .progress { display: flex; align-items: center; gap: .5rem; margin-top: 1rem; }
+    .empty { color: #667; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="/js/main.js"><\/script>
+</body>
+</html></script>
+</article>
+
+<article class="step" data-step="5" id="step-5">
+  <div class="step-head"><span class="step-num">05</span><h2>Your first render</h2></div>
+  <p class="goal">The smallest possible Replicant program: one call to <code>render</code>.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/core.cljs" data-action="new">(ns reading.core
+  (:require [replicant.dom :as r]))
+
+(defn init []
+  (r/render (js/document.getElementById "app")
+            [:main.app
+             [:h1 "Reading list"]
+             [:p "Replicant is rendering this paragraph."]]))</script>
+  <p>Notice the namespace <code>reading.core</code> matches the path <code>src/reading/core.cljs</code>. ClojureScript requires that.</p>
+</article>
+
+<article class="step" data-step="6" id="step-6">
+  <div class="step-head"><span class="step-num">06</span><h2>Start the dev server and open the page</h2></div>
+  <p class="goal">A watcher that recompiles and reloads the browser every time you save.</p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="terminal" data-action="run">npx shadow-cljs watch app</script>
+  <p>The first run downloads dependencies and takes a minute. When you see <code>Build completed</code>, open <a href="http://localhost:8080/index.html">http://localhost:8080/index.html</a>. You should see your heading and paragraph.</p>
+  <h3>A second terminal for a REPL, with tmux</h3>
+  <p>You will use a REPL from step 7 on. Code you evaluate in it runs inside your open browser tab. The easiest setup is a tmux window split in two, with the watcher on one side and the REPL on the other.</p>
+  <p>tmux commands start with a prefix key, <strong>Ctrl-b</strong> by default: press Ctrl-b, let go, then press the command key. If you've remapped the prefix in <code>~/.tmux.conf</code>, use yours instead.</p>
+  <div class="tablewrap"><table class="map">
+  <thead><tr><th>Keys</th><th>What it does</th></tr></thead>
+  <tbody>
+  <tr><td><code>Ctrl-b %</code></td><td>Split side by side (left and right panes)</td></tr>
+  <tr><td><code>Ctrl-b "</code></td><td>Split stacked (top and bottom panes)</td></tr>
+  <tr><td><code>Ctrl-b</code> then an arrow key</td><td>Move to the pane in that direction</td></tr>
+  <tr><td><code>Ctrl-b z</code></td><td>Zoom the current pane to full size (press again to unzoom)</td></tr>
+  <tr><td><code>Ctrl-b d</code></td><td>Detach from the session; everything keeps running</td></tr>
+  </tbody></table></div>
+  <p><strong>1. Start a session in the project folder.</strong> If you're already running the watcher outside tmux, stop it with Ctrl-c first.</p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="terminal" data-action="run">cd reading-list
+tmux new -s reading</script>
+  <p><strong>2. Start the watcher in the first pane.</strong> Wait for <code>Build completed</code>, then open the page in your browser as above.</p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="left pane" data-action="run">npx shadow-cljs watch app</script>
+  <p><strong>3. Split the window with Ctrl-b %.</strong> The new pane opens on the right with the cursor already in it. New panes normally start in the directory the session was created in; if you started tmux elsewhere, <code>cd reading-list</code> first.</p>
+  <p><strong>4. Start the REPL in the new pane.</strong></p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="right pane" data-action="run">npx shadow-cljs cljs-repl app</script>
+  <p>The browser tab must be open, because that's where your REPL code runs. If the REPL reports that no JS runtime is connected, refresh the page.</p>
+  <p><strong>5. Move between panes</strong> with Ctrl-b ← and Ctrl-b →.</p>
+  <div class="note"><p><strong>Leaving and coming back.</strong> Type <code>:cljs/quit</code> to leave the REPL and <code>exit</code> to close a pane. If you detach with Ctrl-b d, <code>tmux attach -t reading</code> brings you back to both panes exactly as you left them, with the watcher still running.</p></div>
+</article>
+
+<article class="step" data-step="7" id="step-7">
+  <div class="step-head"><span class="step-num">07</span><h2>Split the app: state, view and wiring</h2></div>
+  <p class="goal">Before the app grows, give each responsibility its own namespace. The UI becomes a pure function of state, and one small namespace connects it to the browser.</p>
+  <p>By the end of the course, your project will contain these source and test files:</p>
+<script type="text/plain" class="snippet" data-lang="txt" data-file="project layout">src/reading/
+  state.cljc          ← the domain: initial state and pure transitions
+  ui.cljc             ← the view: state in, hiccup out
+  actions.cljs        ← translates action data into state changes (step 9)
+  core.cljs           ← wiring: the atom, render!, dispatch, init
+test/reading/
+  state_test.cljs     ← tests for state (step 8)
+  actions_test.cljs   ← tests for actions (step 9)
+  ui_test.cljs        ← tests for ui (step 9)
+  test_util.cljs      ← a helper for finding things in hiccup (step 9)</script>
+<script type="text/plain" class="snippet" data-lang="txt" data-file="who depends on whom">core ──► actions ──► state
+  └────► ui ───────► state</script>
+  <p>Dependencies only point one way. <code>state</code> depends on nothing. <code>ui</code> reads from <code>state</code> but knows nothing about atoms, events or the DOM. <code>core</code> is the only namespace that touches the browser or holds the atom. That's what makes the first three easy to test.</p>
+  <p>Two files end in <code>.cljc</code> on purpose. They contain only portable Clojure, so they could also run on the JVM, for example to render HTML on a server with <code>replicant.string</code>.</p>
+  <p>Create the domain namespace. For now it only knows what an empty app looks like:</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/state.cljc" data-action="new">(ns reading.state)
+
+(def initial-state
+  {:draft ""
+   :show :all
+   :books []})</script>
+  <p>Create the view namespace. These are pure functions: state in, hiccup out.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/ui.cljc" data-action="new">(ns reading.ui)
+
+(defn book-item [book]
+  [:li {:replicant/key (:id book)}
+   [:span (:title book)]])
+
+(defn render-app [state]
+  [:main.app
+   [:h1 "Reading list"]
+   (if (empty? (:books state))
+     [:p.empty "No books yet."]
+     [:ul.books (map book-item (:books state))])])</script>
+  <p>Replace everything in <code>core.cljs</code> with the wiring:</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/core.cljs" data-action="replace">(ns reading.core
+  (:require [reading.state :as state]
+            [reading.ui :as ui]
+            [replicant.dom :as r]))
+
+;; The one atom. defonce keeps its value across hot reloads.
+(defonce store (atom state/initial-state))
+
+(defn render! [state]
+  (r/render (js/document.getElementById "app")
+            (ui/render-app state)))
+
+;; shadow-cljs calls this after every hot reload
+(defn ^:dev/after-load reload! []
+  (render! @store))
+
+(defn init []
+  (add-watch store ::render
+             (fn [_ _ _ new-state] (render! new-state)))
+  (render! @store))</script>
+  <p>Now go to your REPL and change the state by hand. Watch the browser update without a reload:</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="cljs REPL" data-action="repl">(in-ns 'reading.core)
+
+(swap! store update :books conj
+       {:id (random-uuid) :title "Kindred" :read? false})
+
+;; the view is just a function; call it and look at the data
+(ui/render-app @store)</script>
+  <div class="note good"><p>That last line is the heart of Replicant. Your entire UI is a value you can print, compare and test, with no browser involved.</p></div>
+  <div class="checkpoint"><p><strong>Checkpoint after step 7.</strong> These files changed in this step: </p><ul><li><code>src/reading/state.cljc (new)</code></li><li><code>src/reading/ui.cljc (new)</code></li><li><code>src/reading/core.cljs</code></li></ul><p>There are no tests yet; those start in the next step.</p></div>
+</article>
+
+<article class="step" data-step="8" id="step-8">
+  <div class="step-head"><span class="step-num">08</span><h2>Set up tests that run on every save</h2></div>
+  <p class="goal">A test build that reruns the whole suite each time you save a file, plus a way to run a single test namespace from your REPL. From here on, every feature starts with a failing test.</p>
+  <h3>How ClojureScript tests run</h3>
+  <p>Your tests are ClojureScript, just like the app. They are compiled by shadow-cljs to JavaScript and need a JavaScript runtime to execute. Plain Clojure on the JVM (<code>clj</code>, <code>lein test</code>) can't run them. You will use two runtimes:</p>
+  <div class="tablewrap"><table class="map">
+  <thead><tr><th>Runtime</th><th>How</th><th>Use it for</th></tr></thead>
+  <tbody>
+  <tr><td>Node.js</td><td>A second shadow-cljs build with the <code>:node-test</code> target. With <code>:autorun true</code>, shadow-cljs runs the tests in Node after every recompile.</td><td>The whole suite, automatically, on every save. This is your red/green signal.</td></tr>
+  <tr><td>Your browser tab</td><td>The <code>cljs-repl app</code> REPL from step 6, which evaluates code in the open page.</td><td>Running one test namespace, or trying an expression before turning it into a test.</td></tr>
+  </tbody></table></div>
+  <p>Both use <code>cljs.test</code>, which ships with ClojureScript, so there is nothing to install.</p>
+
+  <h3>1. Add the test build</h3>
+  <p>Replace <code>shadow-cljs.edn</code>. Two things change: <code>"test"</code> joins the source paths, and there is a new <code>:test</code> build.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="shadow-cljs.edn" data-action="replace">{:source-paths ["src" "test"]
+
+ :dependencies [[no.cjohansen/replicant "2026.07.1"]]
+
+ :dev-http {8080 "public"}
+
+ :builds
+ {:app {:target :browser
+        :output-dir "public/js"
+        :asset-path "/js"
+        :modules {:main {:init-fn reading.core/init}}}
+
+  :test {:target :node-test
+         :output-to "out/test.js"
+         :autorun true}}}</script>
+  <p>The <code>:node-test</code> target finds every namespace whose name ends in <code>-test</code>, bundles them into <code>out/test.js</code>, and generates a runner. <code>:autorun true</code> tells shadow-cljs to run that file with Node after each compile. <code>out/</code> is build output; if you use Git, add it to <code>.gitignore</code>.</p>
+
+  <h3>2. Write a first test</h3>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="terminal" data-action="run">mkdir -p test/reading</script>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/state_test.cljs" data-action="new">(ns reading.state-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.state :as state]))
+
+(deftest initial-state-test
+  (is (= [] (:books state/initial-state)))
+  (is (= "" (:draft state/initial-state)))
+  (is (= :all (:show state/initial-state))))</script>
+  <p>Two naming rules make shadow-cljs find this file. The namespace must end in <code>-test</code>. And because dashes in namespace names become underscores in file names, <code>reading.state-test</code> lives in <code>state_test.cljs</code>.</p>
+  <p>Every test file needs a <code>:require</code> entry for each namespace it uses: <code>cljs.test</code> for <code>deftest</code> and <code>is</code>, plus the namespace being tested. If the watcher prints <code>Use of undeclared Var</code>, a require is usually missing.</p>
+
+  <h3>3. Restart the watcher with both builds</h3>
+  <p>shadow-cljs reads <code>:source-paths</code> only at startup, so restart it. In the left tmux pane, press Ctrl-c, then start both builds in one process:</p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="left pane" data-action="run">npx shadow-cljs watch app test</script>
+  <p>One process watching two builds uses one JVM instead of two. After the builds complete, the test output appears in the same pane:</p>
+<script type="text/plain" class="snippet" data-lang="txt" data-file="left pane output">Testing reading.state-test
+
+Ran 1 tests containing 3 assertions.
+0 failures, 0 errors.</script>
+  <p>Your REPL in the right pane keeps working. If it lost its connection during the restart, quit it with <code>:cljs/quit</code>, refresh the browser, and start <code>npx shadow-cljs cljs-repl app</code> again.</p>
+
+  <h3>4. Prove the loop works: make it fail</h3>
+  <p>In <code>state_test.cljs</code>, change <code>(is (= [] ...))</code> to <code>(is (= [:oops] ...))</code> and save. Within a second or two the left pane shows <code>FAIL in (initial-state-test)</code> with the expected and actual values. Change it back and save: <code>0 failures</code>. That save-and-look cycle is the rhythm for the rest of the course.</p>
+
+  <h3>5. Run tests from the REPL</h3>
+  <p>In the right pane, you can run one namespace inside the browser runtime. shadow-cljs's REPL can load any namespace on the source paths, including test namespaces the app build doesn't include:</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="cljs REPL" data-action="repl">(require '[cljs.test :refer [run-tests]])
+
+(require 'reading.state-test :reload)
+(run-tests 'reading.state-test)</script>
+  <p>Use <code>:reload</code> after editing the test file, so the REPL picks up your changes. The REPL is best for trying things out: evaluate a transition by hand, and once it behaves, copy the expression into a test.</p>
+
+  <div class="note"><p><strong>What to test in this app.</strong> Test <code>state</code> thoroughly: it's pure and holds the logic. Test <code>ui</code> for <em>behavior carried by data</em>, like which action a button sends or which message appears, not for exact layout, which would break every time you add a styling <code>div</code>. Test <code>actions</code> with a plain atom and a fake event. Leave <code>core</code> to the browser; it's twenty lines of wiring.</p></div>
+  <div class="checkpoint"><p><strong>Checkpoint after step 8.</strong> These files changed in this step: </p><ul><li><code>shadow-cljs.edn</code></li><li><code>test/reading/state_test.cljs (new)</code></li></ul><p>The watcher pane should show <code>0 failures, 0 errors</code>.</p></div>
+</article>
+
+<article class="step" data-step="9" id="step-9">
+  <div class="step-head"><span class="step-num">09</span><h2>Add books, test first</h2></div>
+  <p class="goal">A text input and an Add button. Each layer gets a failing test, then the code that makes it pass. This step creates four new files and changes four existing ones.</p>
+  <h3>Domain: red</h3>
+  <p>Replace <code>state_test.cljs</code>. New in this version: <code>add-book-test</code>, which tests a function that doesn't exist yet.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/state_test.cljs" data-action="replace">(ns reading.state-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.state :as state]))
+
+(deftest initial-state-test
+  (is (= [] (:books state/initial-state)))
+  (is (= "" (:draft state/initial-state)))
+  (is (= :all (:show state/initial-state))))
+
+(deftest add-book-test
+  (testing "adds the draft as an unread book and clears the draft"
+    (let [s (state/add-book (assoc state/initial-state :draft "Kindred"))]
+      (is (= "" (:draft s)))
+      (is (= [{:title "Kindred" :read? false}]
+             (map #(dissoc % :id) (:books s))))
+      (is (uuid? (:id (first (:books s)))))))
+  (testing "trims surrounding whitespace"
+    (is (= "Kindred"
+           (-> (assoc state/initial-state :draft "  Kindred ")
+               state/add-book :books first :title))))
+  (testing "ignores a blank draft: no book added, state unchanged"
+    (let [s (assoc state/initial-state :draft "   ")]
+      (is (= s (state/add-book s))))))</script>
+  <p>Save. The left pane shows a warning, <code>Use of undeclared Var reading.state/add-book</code>, and the test run reports an error. That's red. The ids are random, so the test strips them with <code>dissoc</code> and only checks that one is a UUID.</p>
+
+  <h3>Domain: green</h3>
+  <p>Replace <code>state.cljc</code>. New in this version: a require for <code>clojure.string</code>, and <code>add-book</code>.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/state.cljc" data-action="replace">(ns reading.state
+  (:require [clojure.string :as str]))
+
+(def initial-state
+  {:draft ""
+   :show :all
+   :books []})
+
+(defn add-book [state]
+  (let [title (str/trim (:draft state))]
+    (if (str/blank? title)
+      state
+      (-> state
+          (update :books conj {:id (random-uuid)
+                               :title title
+                               :read? false})
+          (assoc :draft "")))))</script>
+  <p>Save: <code>0 failures</code>.</p>
+
+  <h3>Actions: red</h3>
+  <p>The actions namespace turns data like <code>[[:action/add-book]]</code> into state changes. Its tests need two stand-ins: a plain atom instead of the app's store, and a JavaScript object shaped like a DOM event instead of a real one.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/actions_test.cljs" data-action="new">(ns reading.actions-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.actions :as actions]
+            [reading.state :as state]))
+
+;; Just enough of a DOM event for interpolate and prevent-default
+(defn fake-event [value]
+  #js {:target #js {:value value}
+       :preventDefault (fn [])})
+
+(deftest interpolate-test
+  (is (= [[:action/assoc-in [:draft] "Kindred"]]
+         (actions/interpolate
+          (fake-event "Kindred")
+          [[:action/assoc-in [:draft] :event/target.value]]))))
+
+(deftest typing-then-submitting-adds-a-book
+  (let [store (atom state/initial-state)]
+    (actions/handle! store (fake-event "Kindred")
+                     [[:action/assoc-in [:draft] :event/target.value]])
+    (is (= "Kindred" (:draft @store)))
+    (actions/handle! store (fake-event nil)
+                     [[:action/prevent-default] [:action/add-book]])
+    (is (= ["Kindred"] (map :title (:books @store))))
+    (is (= "" (:draft @store)))))</script>
+  <p>Save: red, because <code>reading.actions</code> doesn't exist. The second test replays exactly what the browser will do: an <code>input</code> event, then a <code>submit</code>.</p>
+
+  <h3>Actions: green</h3>
+  <p>The store is passed in as an argument rather than reached for as a global. That's what lets the test hand in its own atom.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/actions.cljs" data-action="new">(ns reading.actions
+  (:require [clojure.walk :as walk]
+            [reading.state :as state]))
+
+(defn interpolate
+  "Replace placeholders like :event/target.value with real values."
+  [event actions]
+  (walk/postwalk
+   (fn [x]
+     (case x
+       :event/target.value (.. event -target -value)
+       x))
+   actions))
+
+(defn perform! [store event [action & args]]
+  (case action
+    :action/prevent-default (.preventDefault event)
+    :action/assoc-in (let [[path value] args]
+                       (swap! store assoc-in path value))
+    :action/add-book (swap! store state/add-book)
+    (js/console.warn "Unknown action:" (pr-str action))))
+
+(defn handle! [store event actions]
+  (doseq [action (interpolate event actions)]
+    (perform! store event action)))</script>
+  <p>Save: <code>0 failures</code>.</p>
+
+  <h3>View: a small hiccup helper</h3>
+  <p>View tests need to find elements inside the hiccup that <code>render-app</code> returns. Hiccup is just nested vectors, so a few lines of <code>tree-seq</code> are enough. This file is a helper, not a test, so its name does not end in <code>-test</code>:</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/test_util.cljs" data-action="new">(ns reading.test-util)
+
+(defn nodes
+  "Every hiccup element in a tree, depth first, including the root."
+  [hiccup]
+  (filter #(and (vector? %) (keyword? (first %)))
+          (tree-seq sequential? seq hiccup)))
+
+(defn attrs
+  "The attribute map of an element, or nil."
+  [node]
+  (let [a (second node)]
+    (when (map? a) a)))
+
+(defn tag-name
+  "The bare tag: :li.read#x becomes \"li\"."
+  [node]
+  (re-find #"^[^.#]+" (name (first node))))
+
+(defn find-tag [hiccup tag]
+  (filter #(= tag (tag-name %)) (nodes hiccup)))
+
+(defn text
+  "All the text inside an element, joined."
+  [node]
+  (apply str (filter #(or (string? %) (number? %))
+                     (tree-seq sequential? seq node))))</script>
+  <p><code>tree-seq sequential? seq</code> walks vectors and seqs but not maps, so action vectors inside <code>:on</code> maps are never mistaken for elements.</p>
+
+  <h3>View: red</h3>
+  <p>The view tests get their own file. Its <code>ns</code> form requires the namespace under test (<code>reading.ui</code>), the state it builds inputs from (<code>reading.state</code>), and the helper (<code>reading.test-util</code>).</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/ui_test.cljs" data-action="new">(ns reading.ui-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.state :as state]
+            [reading.test-util :as tu]
+            [reading.ui :as ui]))
+
+(deftest form-test
+  (let [app (ui/render-app (assoc state/initial-state :draft "Kin"))
+        [form] (tu/find-tag app "form")
+        [input] (tu/find-tag app "input")]
+    (testing "submitting the form adds a book"
+      (is (= [[:action/prevent-default] [:action/add-book]]
+             (get-in (tu/attrs form) [:on :submit]))))
+    (testing "the input shows the draft and stores every keystroke"
+      (is (= "Kin" (:value (tu/attrs input))))
+      (is (= [[:action/assoc-in [:draft] :event/target.value]]
+             (get-in (tu/attrs input) [:on :input]))))))</script>
+  <p>Save: red, because there is no form yet. Notice what's being tested: not how the form looks, but that it sends the right actions. Because events are data, that's an ordinary equality check.</p>
+
+  <h3>View: green</h3>
+  <p>Replace <code>ui.cljc</code>. New in this version: a form inside <code>render-app</code>, between the heading and the list.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/ui.cljc" data-action="replace">(ns reading.ui)
+
+(defn book-item [book]
+  [:li {:replicant/key (:id book)}
+   [:span (:title book)]])
+
+(defn render-app [state]
+  [:main.app
+   [:h1 "Reading list"]
+   [:form {:on {:submit [[:action/prevent-default]
+                         [:action/add-book]]}}
+    [:input {:type "text"
+             :placeholder "Add a book title"
+             :value (:draft state)
+             :on {:input [[:action/assoc-in [:draft] :event/target.value]]}}]
+    [:button {:type "submit"} "Add"]]
+   (if (empty? (:books state))
+     [:p.empty "No books yet."]
+     [:ul.books (map book-item (:books state))])])</script>
+  <p>Save: <code>0 failures</code>.</p>
+
+  <h3>Wiring: check in the browser</h3>
+  <p>All three layers are green. The last piece connects them to the page, and it's the only part you check by hand. Replace <code>core.cljs</code>. New in this version: a require for <code>reading.actions</code>, and a <code>set-dispatch!</code> call in <code>init</code>.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/core.cljs" data-action="replace">(ns reading.core
+  (:require [reading.actions :as actions]
+            [reading.state :as state]
+            [reading.ui :as ui]
+            [replicant.dom :as r]))
+
+;; The one atom. defonce keeps its value across hot reloads.
+(defonce store (atom state/initial-state))
+
+(defn render! [state]
+  (r/render (js/document.getElementById "app")
+            (ui/render-app state)))
+
+;; shadow-cljs calls this after every hot reload
+(defn ^:dev/after-load reload! []
+  (render! @store))
+
+(defn init []
+  (r/set-dispatch!
+   (fn [{:replicant/keys [trigger dom-event]} action-data]
+     (when (= trigger :replicant.trigger/dom-event)
+       (actions/handle! store dom-event action-data))))
+  (add-watch store ::render
+             (fn [_ _ _ new-state] (render! new-state)))
+  (render! @store))</script>
+  <p>Hot reload calls <code>reload!</code>, not <code>init</code>, so refresh the browser once. Type a title and press Enter. Replicant sees on each keystroke that the input's value already matches the draft and leaves it alone, so your cursor stays put.</p>
+  <p>From here on, <code>core.cljs</code> is finished. Every new feature follows the same path: a test and a transition in <code>state</code>, a test and a branch in <code>actions</code>, a test and some hiccup in <code>ui</code>.</p>
+  <div class="checkpoint"><p><strong>Checkpoint after step 9.</strong> These files changed in this step: </p><ul><li><code>test/reading/state_test.cljs</code></li><li><code>src/reading/state.cljc</code></li><li><code>test/reading/actions_test.cljs (new)</code></li><li><code>src/reading/actions.cljs (new)</code></li><li><code>test/reading/test_util.cljs (new)</code></li><li><code>test/reading/ui_test.cljs (new)</code></li><li><code>src/reading/ui.cljc</code></li><li><code>src/reading/core.cljs</code></li></ul><p>The watcher pane should show <code>0 failures, 0 errors</code>.</p></div>
+</article>
+
+<article class="step" data-step="10" id="step-10">
+  <div class="step-head"><span class="step-num">10</span><h2>Mark as read and remove, test first</h2></div>
+  <p class="goal">A checkbox and a remove button per book. This is where <code>:replicant/key</code> earns its place. Six files change, two per layer.</p>
+  <h3>Domain</h3>
+  <p>Replace <code>state_test.cljs</code>. New in this version: a <code>two-books</code> fixture, <code>toggle-read-test</code> and <code>remove-book-test</code>. Fixed ids like <code>1</code> and <code>2</code> keep the tests readable; the functions don't care what an id is.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/state_test.cljs" data-action="replace">(ns reading.state-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.state :as state]))
+
+(deftest initial-state-test
+  (is (= [] (:books state/initial-state)))
+  (is (= "" (:draft state/initial-state)))
+  (is (= :all (:show state/initial-state))))
+
+(deftest add-book-test
+  (testing "adds the draft as an unread book and clears the draft"
+    (let [s (state/add-book (assoc state/initial-state :draft "Kindred"))]
+      (is (= "" (:draft s)))
+      (is (= [{:title "Kindred" :read? false}]
+             (map #(dissoc % :id) (:books s))))
+      (is (uuid? (:id (first (:books s)))))))
+  (testing "trims surrounding whitespace"
+    (is (= "Kindred"
+           (-> (assoc state/initial-state :draft "  Kindred ")
+               state/add-book :books first :title))))
+  (testing "ignores a blank draft: no book added, state unchanged"
+    (let [s (assoc state/initial-state :draft "   ")]
+      (is (= s (state/add-book s))))))
+
+(def two-books
+  (assoc state/initial-state
+         :books [{:id 1 :title "Kindred" :read? false}
+                 {:id 2 :title "Beloved" :read? true}]))
+
+(deftest toggle-read-test
+  (is (= [true true] (map :read? (:books (state/toggle-read two-books 1)))))
+  (is (= [false false] (map :read? (:books (state/toggle-read two-books 2))))))
+
+(deftest remove-book-test
+  (is (= ["Beloved"] (map :title (:books (state/remove-book two-books 1)))))
+  (is (= two-books (state/remove-book two-books 99)) "unknown ids change nothing"))</script>
+  <p>Save: red. Then replace <code>state.cljc</code>. New in this version: <code>toggle-read</code> and <code>remove-book</code> at the bottom.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/state.cljc" data-action="replace">(ns reading.state
+  (:require [clojure.string :as str]))
+
+(def initial-state
+  {:draft ""
+   :show :all
+   :books []})
+
+(defn add-book [state]
+  (let [title (str/trim (:draft state))]
+    (if (str/blank? title)
+      state
+      (-> state
+          (update :books conj {:id (random-uuid)
+                               :title title
+                               :read? false})
+          (assoc :draft "")))))
+
+(defn toggle-read [state id]
+  (update state :books
+          (fn [books]
+            (mapv #(if (= id (:id %)) (update % :read? not) %) books))))
+
+(defn remove-book [state id]
+  (update state :books
+          (fn [books]
+            (filterv #(not= id (:id %)) books))))</script>
+  <p>Save: green.</p>
+
+  <h3>Actions</h3>
+  <p>Replace <code>actions_test.cljs</code>. New in this version: <code>toggle-and-remove-test</code> at the bottom.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/actions_test.cljs" data-action="replace">(ns reading.actions-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.actions :as actions]
+            [reading.state :as state]))
+
+;; Just enough of a DOM event for interpolate and prevent-default
+(defn fake-event [value]
+  #js {:target #js {:value value}
+       :preventDefault (fn [])})
+
+(deftest interpolate-test
+  (is (= [[:action/assoc-in [:draft] "Kindred"]]
+         (actions/interpolate
+          (fake-event "Kindred")
+          [[:action/assoc-in [:draft] :event/target.value]]))))
+
+(deftest typing-then-submitting-adds-a-book
+  (let [store (atom state/initial-state)]
+    (actions/handle! store (fake-event "Kindred")
+                     [[:action/assoc-in [:draft] :event/target.value]])
+    (is (= "Kindred" (:draft @store)))
+    (actions/handle! store (fake-event nil)
+                     [[:action/prevent-default] [:action/add-book]])
+    (is (= ["Kindred"] (map :title (:books @store))))
+    (is (= "" (:draft @store)))))
+
+(deftest toggle-and-remove-test
+  (let [store (atom (assoc state/initial-state
+                           :books [{:id 1 :title "Kindred" :read? false}]))]
+    (actions/handle! store (fake-event nil) [[:action/toggle-read 1]])
+    (is (true? (:read? (first (:books @store)))))
+    (actions/handle! store (fake-event nil) [[:action/remove-book 1]])
+    (is (empty? (:books @store)))))</script>
+  <p>Save: red, and the left pane logs <code>Unknown action</code>. Then replace <code>actions.cljs</code>. New in this version: two branches in <code>perform!</code>, just above the <code>js/console.warn</code> fallback.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/actions.cljs" data-action="replace">(ns reading.actions
+  (:require [clojure.walk :as walk]
+            [reading.state :as state]))
+
+(defn interpolate
+  "Replace placeholders like :event/target.value with real values."
+  [event actions]
+  (walk/postwalk
+   (fn [x]
+     (case x
+       :event/target.value (.. event -target -value)
+       x))
+   actions))
+
+(defn perform! [store event [action & args]]
+  (case action
+    :action/prevent-default (.preventDefault event)
+    :action/assoc-in (let [[path value] args]
+                       (swap! store assoc-in path value))
+    :action/add-book (swap! store state/add-book)
+    :action/toggle-read (swap! store state/toggle-read (first args))
+    :action/remove-book (swap! store state/remove-book (first args))
+    (js/console.warn "Unknown action:" (pr-str action))))
+
+(defn handle! [store event actions]
+  (doseq [action (interpolate event actions)]
+    (perform! store event action)))</script>
+  <p>Save: green.</p>
+
+  <h3>View</h3>
+  <p>The view test goes in <code>ui_test.cljs</code>, not <code>actions_test.cljs</code>: it calls <code>ui/book-item</code>, and only <code>ui_test.cljs</code> requires <code>reading.ui</code>. Replace it. New in this version: <code>book-item-test</code> at the bottom.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/ui_test.cljs" data-action="replace">(ns reading.ui-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.state :as state]
+            [reading.test-util :as tu]
+            [reading.ui :as ui]))
+
+(deftest form-test
+  (let [app (ui/render-app (assoc state/initial-state :draft "Kin"))
+        [form] (tu/find-tag app "form")
+        [input] (tu/find-tag app "input")]
+    (testing "submitting the form adds a book"
+      (is (= [[:action/prevent-default] [:action/add-book]]
+             (get-in (tu/attrs form) [:on :submit]))))
+    (testing "the input shows the draft and stores every keystroke"
+      (is (= "Kin" (:value (tu/attrs input))))
+      (is (= [[:action/assoc-in [:draft] :event/target.value]]
+             (get-in (tu/attrs input) [:on :input]))))))
+
+(deftest book-item-test
+  (let [li (ui/book-item {:id 42 :title "Kindred" :read? false})
+        [checkbox] (tu/find-tag li "input")
+        [button] (tu/find-tag li "button")]
+    (testing "each item is keyed by the book's id"
+      (is (= 42 (:replicant/key (tu/attrs li)))))
+    (testing "the controls send actions for this book"
+      (is (= [[:action/toggle-read 42]] (get-in (tu/attrs checkbox) [:on :change])))
+      (is (= [[:action/remove-book 42]] (get-in (tu/attrs button) [:on :click]))))
+    (testing "read books get the read class"
+      (is (nil? (:class (tu/attrs li))))
+      (is (= "read" (:class (tu/attrs (ui/book-item {:id 1 :title "x" :read? true}))))))))</script>
+  <p>Save: red. Then replace <code>ui.cljc</code>. New in this version: <code>book-item</code> now has a checkbox, a <code>read</code> class and a Remove button. <code>render-app</code> is unchanged.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/ui.cljc" data-action="replace">(ns reading.ui)
+
+(defn book-item [book]
+  [:li {:replicant/key (:id book)
+        :class (when (:read? book) "read")}
+   [:label
+    [:input {:type "checkbox"
+             :checked (:read? book)
+             :on {:change [[:action/toggle-read (:id book)]]}}]
+    " "
+    [:span (:title book)]]
+   [:button {:type "button"
+             :title "Remove"
+             :on {:click [[:action/remove-book (:id book)]]}}
+    "Remove"]])
+
+(defn render-app [state]
+  [:main.app
+   [:h1 "Reading list"]
+   [:form {:on {:submit [[:action/prevent-default]
+                         [:action/add-book]]}}
+    [:input {:type "text"
+             :placeholder "Add a book title"
+             :value (:draft state)
+             :on {:input [[:action/assoc-in [:draft] :event/target.value]]}}]
+    [:button {:type "submit"} "Add"]]
+   (if (empty? (:books state))
+     [:p.empty "No books yet."]
+     [:ul.books (map book-item (:books state))])])</script>
+  <p>Save: green. Now check the browser: add four books, tick the second, remove the first. Because each <code>&lt;li&gt;</code> carries the book's id as its key, Replicant removes exactly one node and moves nothing else.</p>
+  <div class="checkpoint"><p><strong>Checkpoint after step 10.</strong> These files changed in this step: </p><ul><li><code>test/reading/state_test.cljs</code></li><li><code>src/reading/state.cljc</code></li><li><code>test/reading/actions_test.cljs</code></li><li><code>src/reading/actions.cljs</code></li><li><code>test/reading/ui_test.cljs</code></li><li><code>src/reading/ui.cljc</code></li></ul><p>The watcher pane should show <code>0 failures, 0 errors</code>.</p></div>
+</article>
+
+<article class="step" data-step="11" id="step-11">
+  <div class="step-head"><span class="step-num">11</span><h2>Filter the list, test first</h2></div>
+  <p class="goal">All, Unread and Read buttons. No new actions are needed, so <code>actions</code> doesn't change. Four files change.</p>
+  <h3>Domain</h3>
+  <p>Which books match the filter is a question about the data, so it belongs in <code>state</code>. Replace <code>state_test.cljs</code>. New in this version: <code>visible-books-test</code> at the bottom.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/state_test.cljs" data-action="replace">(ns reading.state-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.state :as state]))
+
+(deftest initial-state-test
+  (is (= [] (:books state/initial-state)))
+  (is (= "" (:draft state/initial-state)))
+  (is (= :all (:show state/initial-state))))
+
+(deftest add-book-test
+  (testing "adds the draft as an unread book and clears the draft"
+    (let [s (state/add-book (assoc state/initial-state :draft "Kindred"))]
+      (is (= "" (:draft s)))
+      (is (= [{:title "Kindred" :read? false}]
+             (map #(dissoc % :id) (:books s))))
+      (is (uuid? (:id (first (:books s)))))))
+  (testing "trims surrounding whitespace"
+    (is (= "Kindred"
+           (-> (assoc state/initial-state :draft "  Kindred ")
+               state/add-book :books first :title))))
+  (testing "ignores a blank draft: no book added, state unchanged"
+    (let [s (assoc state/initial-state :draft "   ")]
+      (is (= s (state/add-book s))))))
+
+(def two-books
+  (assoc state/initial-state
+         :books [{:id 1 :title "Kindred" :read? false}
+                 {:id 2 :title "Beloved" :read? true}]))
+
+(deftest toggle-read-test
+  (is (= [true true] (map :read? (:books (state/toggle-read two-books 1)))))
+  (is (= [false false] (map :read? (:books (state/toggle-read two-books 2))))))
+
+(deftest remove-book-test
+  (is (= ["Beloved"] (map :title (:books (state/remove-book two-books 1)))))
+  (is (= two-books (state/remove-book two-books 99)) "unknown ids change nothing"))
+
+(deftest visible-books-test
+  (is (= ["Kindred" "Beloved"] (map :title (state/visible-books two-books))))
+  (is (= ["Kindred"] (map :title (state/visible-books (assoc two-books :show :unread)))))
+  (is (= ["Beloved"] (map :title (state/visible-books (assoc two-books :show :read))))))</script>
+  <p>Save: red. Then replace <code>state.cljc</code>. New in this version: <code>visible-books</code> at the bottom.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/state.cljc" data-action="replace">(ns reading.state
+  (:require [clojure.string :as str]))
+
+(def initial-state
+  {:draft ""
+   :show :all
+   :books []})
+
+(defn add-book [state]
+  (let [title (str/trim (:draft state))]
+    (if (str/blank? title)
+      state
+      (-> state
+          (update :books conj {:id (random-uuid)
+                               :title title
+                               :read? false})
+          (assoc :draft "")))))
+
+(defn toggle-read [state id]
+  (update state :books
+          (fn [books]
+            (mapv #(if (= id (:id %)) (update % :read? not) %) books))))
+
+(defn remove-book [state id]
+  (update state :books
+          (fn [books]
+            (filterv #(not= id (:id %)) books))))
+
+(defn visible-books [{:keys [books show]}]
+  (case show
+    :all books
+    :unread (remove :read? books)
+    :read (filter :read? books)))</script>
+  <p>The state key is named <code>:show</code> rather than <code>:filter</code> on purpose. Destructuring <code>{:keys [filter]}</code> would shadow <code>clojure.core/filter</code> inside the function, and the <code>:read</code> branch would break. The test above catches that immediately.</p>
+
+  <h3>View</h3>
+  <p>Replace <code>ui_test.cljs</code>. New in this version: its own <code>two-books</code> fixture and three tests at the bottom.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/ui_test.cljs" data-action="replace">(ns reading.ui-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.state :as state]
+            [reading.test-util :as tu]
+            [reading.ui :as ui]))
+
+(deftest form-test
+  (let [app (ui/render-app (assoc state/initial-state :draft "Kin"))
+        [form] (tu/find-tag app "form")
+        [input] (tu/find-tag app "input")]
+    (testing "submitting the form adds a book"
+      (is (= [[:action/prevent-default] [:action/add-book]]
+             (get-in (tu/attrs form) [:on :submit]))))
+    (testing "the input shows the draft and stores every keystroke"
+      (is (= "Kin" (:value (tu/attrs input))))
+      (is (= [[:action/assoc-in [:draft] :event/target.value]]
+             (get-in (tu/attrs input) [:on :input]))))))
+
+(deftest book-item-test
+  (let [li (ui/book-item {:id 42 :title "Kindred" :read? false})
+        [checkbox] (tu/find-tag li "input")
+        [button] (tu/find-tag li "button")]
+    (testing "each item is keyed by the book's id"
+      (is (= 42 (:replicant/key (tu/attrs li)))))
+    (testing "the controls send actions for this book"
+      (is (= [[:action/toggle-read 42]] (get-in (tu/attrs checkbox) [:on :change])))
+      (is (= [[:action/remove-book 42]] (get-in (tu/attrs button) [:on :click]))))
+    (testing "read books get the read class"
+      (is (nil? (:class (tu/attrs li))))
+      (is (= "read" (:class (tu/attrs (ui/book-item {:id 1 :title "x" :read? true}))))))))
+
+(def two-books
+  (assoc state/initial-state
+         :books [{:id 1 :title "Kindred" :read? false}
+                 {:id 2 :title "Beloved" :read? true}]))
+
+(deftest filter-button-test
+  (let [active (ui/filter-button :read :read "Read")
+        inactive (ui/filter-button :all :read "Read")]
+    (is (= "active" (:class (tu/attrs active))))
+    (is (nil? (:class (tu/attrs inactive))))
+    (is (= [[:action/assoc-in [:show] :read]] (get-in (tu/attrs active) [:on :click])))))
+
+(deftest only-visible-books-are-listed
+  (let [app (ui/render-app (assoc two-books :show :unread))]
+    (is (= ["Kindred"] (map tu/text (tu/find-tag app "span"))))))
+
+(deftest empty-message-when-nothing-matches
+  (let [app (ui/render-app (assoc two-books :show :read
+                                  :books [{:id 1 :title "Kindred" :read? false}]))]
+    (is (some #(= "Nothing to show. Add a title above, or pick another filter." (tu/text %))
+              (tu/find-tag app "p")))))</script>
+  <p>Save: red. Then replace <code>ui.cljc</code>. New in this version:</p>
+  <ul class="plain">
+  <li>The <code>ns</code> form requires <code>reading.state</code>, so the view can ask it for <code>visible-books</code>.</li>
+  <li>A new <code>filter-button</code> function.</li>
+  <li><code>render-app</code> binds <code>visible</code> in a <code>let</code>, renders three filter buttons, and lists only the visible books. The old list, which rendered every book, is gone. If you edit by hand instead of replacing the file, make sure the old <code>(if (empty? (:books state)) ...)</code> block is deleted, or every book will appear twice.</li>
+  </ul>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/ui.cljc" data-action="replace">(ns reading.ui
+  (:require [reading.state :as state]))
+
+(defn book-item [book]
+  [:li {:replicant/key (:id book)
+        :class (when (:read? book) "read")}
+   [:label
+    [:input {:type "checkbox"
+             :checked (:read? book)
+             :on {:change [[:action/toggle-read (:id book)]]}}]
+    " "
+    [:span (:title book)]]
+   [:button {:type "button"
+             :title "Remove"
+             :on {:click [[:action/remove-book (:id book)]]}}
+    "Remove"]])
+
+(defn filter-button [current value label]
+  [:button {:type "button"
+            :class (when (= current value) "active")
+            :on {:click [[:action/assoc-in [:show] value]]}}
+   label])
+
+(defn render-app [state]
+  (let [visible (state/visible-books state)]
+    [:main.app
+     [:h1 "Reading list"]
+     [:form {:on {:submit [[:action/prevent-default]
+                           [:action/add-book]]}}
+      [:input {:type "text"
+               :placeholder "Add a book title"
+               :value (:draft state)
+               :on {:input [[:action/assoc-in [:draft] :event/target.value]]}}]
+      [:button {:type "submit"} "Add"]]
+     [:nav.filters
+      (filter-button (:show state) :all "All")
+      (filter-button (:show state) :unread "Unread")
+      (filter-button (:show state) :read "Read")]
+     (if (empty? visible)
+       [:p.empty "Nothing to show. Add a title above, or pick another filter."]
+       [:ul.books (map book-item visible)])]))</script>
+  <p>Save: green. The general <code>:action/assoc-in</code> from step 9 already handles these buttons, and its test already covers it.</p>
+  <div class="checkpoint"><p><strong>Checkpoint after step 11.</strong> These files changed in this step: </p><ul><li><code>test/reading/state_test.cljs</code></li><li><code>src/reading/state.cljc</code></li><li><code>test/reading/ui_test.cljs</code></li><li><code>src/reading/ui.cljc</code></li></ul><p>The watcher pane should show <code>0 failures, 0 errors</code>.</p></div>
+</article>
+
+<article class="step" data-step="12" id="step-12">
+  <div class="step-head"><span class="step-num">12</span><h2>Focus the input with a life-cycle hook</h2></div>
+  <p class="goal">Reach the real DOM node once, when the input first appears. One file changes.</p>
+  <p>Replace <code>ui.cljc</code>. New in this version: a <code>:replicant/on-mount</code> entry in the text input's attribute map.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/ui.cljc" data-action="replace">(ns reading.ui
+  (:require [reading.state :as state]))
+
+(defn book-item [book]
+  [:li {:replicant/key (:id book)
+        :class (when (:read? book) "read")}
+   [:label
+    [:input {:type "checkbox"
+             :checked (:read? book)
+             :on {:change [[:action/toggle-read (:id book)]]}}]
+    " "
+    [:span (:title book)]]
+   [:button {:type "button"
+             :title "Remove"
+             :on {:click [[:action/remove-book (:id book)]]}}
+    "Remove"]])
+
+(defn filter-button [current value label]
+  [:button {:type "button"
+            :class (when (= current value) "active")
+            :on {:click [[:action/assoc-in [:show] value]]}}
+   label])
+
+(defn render-app [state]
+  (let [visible (state/visible-books state)]
+    [:main.app
+     [:h1 "Reading list"]
+     [:form {:on {:submit [[:action/prevent-default]
+                           [:action/add-book]]}}
+      [:input {:type "text"
+               :placeholder "Add a book title"
+               :value (:draft state)
+               :replicant/on-mount (fn [{:replicant/keys [node]}]
+                                     (.focus node))
+               :on {:input [[:action/assoc-in [:draft] :event/target.value]]}}]
+      [:button {:type "submit"} "Add"]]
+     [:nav.filters
+      (filter-button (:show state) :all "All")
+      (filter-button (:show state) :unread "Unread")
+      (filter-button (:show state) :read "Read")]
+     (if (empty? visible)
+       [:p.empty "Nothing to show. Add a title above, or pick another filter."]
+       [:ul.books (map book-item visible)])]))</script>
+  <p>Refresh the page: the cursor is in the input, ready to type. The hook runs on mount only, so re-renders don't steal focus back from other controls.</p>
+  <div class="note"><p><strong>Why no test here.</strong> Whether an element has focus is DOM behavior, and your Node tests have no DOM. Testing it would need a browser test runner, which is a lot of setup for one line. This is the kind of thing to check by eye. Your existing tests still pass, which confirms the hook didn't disturb anything else.</p></div>
+  <div class="checkpoint"><p><strong>Checkpoint after step 12.</strong> These files changed in this step: </p><ul><li><code>src/reading/ui.cljc</code></li></ul><p>The watcher pane should show <code>0 failures, 0 errors</code>.</p></div>
+</article>
+
+<article class="step" data-step="13" id="step-13">
+  <div class="step-head"><span class="step-num">13</span><h2>A reusable piece with an alias, test first</h2></div>
+  <p class="goal">A progress bar with its own tag name, shown only when there are books. Two files change.</p>
+  <p>A nice property of aliases for testing: <code>render-app</code> returns the alias <em>unexpanded</em>, as <code>[:reading.ui/progress {...}]</code>. Replicant expands it later, while rendering. So a test can check which alias was used and with which attributes, without caring what the progress bar looks like inside.</p>
+  <p>Replace <code>ui_test.cljs</code>. New in this version: a <code>progress-nodes</code> helper and <code>progress-test</code> at the bottom.</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/ui_test.cljs" data-action="replace">(ns reading.ui-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.state :as state]
+            [reading.test-util :as tu]
+            [reading.ui :as ui]))
+
+(deftest form-test
+  (let [app (ui/render-app (assoc state/initial-state :draft "Kin"))
+        [form] (tu/find-tag app "form")
+        [input] (tu/find-tag app "input")]
+    (testing "submitting the form adds a book"
+      (is (= [[:action/prevent-default] [:action/add-book]]
+             (get-in (tu/attrs form) [:on :submit]))))
+    (testing "the input shows the draft and stores every keystroke"
+      (is (= "Kin" (:value (tu/attrs input))))
+      (is (= [[:action/assoc-in [:draft] :event/target.value]]
+             (get-in (tu/attrs input) [:on :input]))))))
+
+(deftest book-item-test
+  (let [li (ui/book-item {:id 42 :title "Kindred" :read? false})
+        [checkbox] (tu/find-tag li "input")
+        [button] (tu/find-tag li "button")]
+    (testing "each item is keyed by the book's id"
+      (is (= 42 (:replicant/key (tu/attrs li)))))
+    (testing "the controls send actions for this book"
+      (is (= [[:action/toggle-read 42]] (get-in (tu/attrs checkbox) [:on :change])))
+      (is (= [[:action/remove-book 42]] (get-in (tu/attrs button) [:on :click]))))
+    (testing "read books get the read class"
+      (is (nil? (:class (tu/attrs li))))
+      (is (= "read" (:class (tu/attrs (ui/book-item {:id 1 :title "x" :read? true}))))))))
+
+(def two-books
+  (assoc state/initial-state
+         :books [{:id 1 :title "Kindred" :read? false}
+                 {:id 2 :title "Beloved" :read? true}]))
+
+(deftest filter-button-test
+  (let [active (ui/filter-button :read :read "Read")
+        inactive (ui/filter-button :all :read "Read")]
+    (is (= "active" (:class (tu/attrs active))))
+    (is (nil? (:class (tu/attrs inactive))))
+    (is (= [[:action/assoc-in [:show] :read]] (get-in (tu/attrs active) [:on :click])))))
+
+(deftest only-visible-books-are-listed
+  (let [app (ui/render-app (assoc two-books :show :unread))]
+    (is (= ["Kindred"] (map tu/text (tu/find-tag app "span"))))))
+
+(deftest empty-message-when-nothing-matches
+  (let [app (ui/render-app (assoc two-books :show :read
+                                  :books [{:id 1 :title "Kindred" :read? false}]))]
+    (is (some #(= "Nothing to show. Add a title above, or pick another filter." (tu/text %))
+              (tu/find-tag app "p")))))
+
+(defn progress-nodes [app]
+  (filter #(= ui/progress (first %)) (tu/nodes app)))
+
+(deftest progress-test
+  (testing "hidden when there are no books"
+    (is (empty? (progress-nodes (ui/render-app state/initial-state)))))
+  (testing "counts read books out of all books"
+    (let [[p] (progress-nodes (ui/render-app two-books))]
+      (is (= {::ui/done 1 ::ui/total 2} (tu/attrs p))))))</script>
+  <p>Save: red, because <code>ui/progress</code> is undeclared. Aliases are part of the view, so the alias goes in <code>ui.cljc</code>. Replace it. New in this version:</p>
+  <ul class="plain">
+  <li>The <code>ns</code> form requires <code>replicant.alias</code> and refers <code>defalias</code>.</li>
+  <li>A <code>progress</code> alias at the top.</li>
+  <li><code>render-app</code> also binds <code>books</code>, and shows the progress bar below the form when there are any.</li>
+  </ul>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/ui.cljc" data-action="replace">(ns reading.ui
+  (:require [reading.state :as state]
+            [replicant.alias :refer [defalias]]))
+
+(defalias progress [{::keys [done total]}]
+  [:div.progress
+   [:progress {:max total :value done}]
+   [:span (str done " of " total " read")]])
+
+(defn book-item [book]
+  [:li {:replicant/key (:id book)
+        :class (when (:read? book) "read")}
+   [:label
+    [:input {:type "checkbox"
+             :checked (:read? book)
+             :on {:change [[:action/toggle-read (:id book)]]}}]
+    " "
+    [:span (:title book)]]
+   [:button {:type "button"
+             :title "Remove"
+             :on {:click [[:action/remove-book (:id book)]]}}
+    "Remove"]])
+
+(defn filter-button [current value label]
+  [:button {:type "button"
+            :class (when (= current value) "active")
+            :on {:click [[:action/assoc-in [:show] value]]}}
+   label])
+
+(defn render-app [state]
+  (let [books (:books state)
+        visible (state/visible-books state)]
+    [:main.app
+     [:h1 "Reading list"]
+     [:form {:on {:submit [[:action/prevent-default]
+                           [:action/add-book]]}}
+      [:input {:type "text"
+               :placeholder "Add a book title"
+               :value (:draft state)
+               :replicant/on-mount (fn [{:replicant/keys [node]}]
+                                     (.focus node))
+               :on {:input [[:action/assoc-in [:draft] :event/target.value]]}}]
+      [:button {:type "submit"} "Add"]]
+     (when (seq books)
+       [progress {::done (count (filter :read? books))
+                  ::total (count books)}])
+     [:nav.filters
+      (filter-button (:show state) :all "All")
+      (filter-button (:show state) :unread "Unread")
+      (filter-button (:show state) :read "Read")]
+     (if (empty? visible)
+       [:p.empty "Nothing to show. Add a title above, or pick another filter."]
+       [:ul.books (map book-item visible)])]))</script>
+  <p>Save: green. <code>defalias</code> registers the alias under <code>:reading.ui/progress</code> and defines a var <code>progress</code> holding that keyword. That's why the view can write <code>[progress ...]</code> and the test can compare against <code>ui/progress</code>. In the test, <code>::ui/done</code> resolves through the <code>ui</code> alias to <code>:reading.ui/done</code>, the same keyword the view writes as <code>::done</code>.</p>
+  <div class="checkpoint"><p><strong>Checkpoint after step 13.</strong> These files changed in this step: </p><ul><li><code>test/reading/ui_test.cljs</code></li><li><code>src/reading/ui.cljc</code></li></ul><p>The watcher pane should show <code>0 failures, 0 errors</code>.</p></div>
+</article>
+
+<article class="step" data-step="14" id="step-14">
+  <div class="step-head"><span class="step-num">14</span><h2>Compare with the finished files</h2></div>
+  <p class="goal">If something doesn't work, or a test fails and you can't see why, diff your files against these.</p>
+  <details class="full"><summary>shadow-cljs.edn</summary>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="shadow-cljs.edn">{:source-paths ["src" "test"]
+
+ :dependencies [[no.cjohansen/replicant "2026.07.1"]]
+
+ :dev-http {8080 "public"}
+
+ :builds
+ {:app {:target :browser
+        :output-dir "public/js"
+        :asset-path "/js"
+        :modules {:main {:init-fn reading.core/init}}}
+
+  :test {:target :node-test
+         :output-to "out/test.js"
+         :autorun true}}}</script>
+  </details>
+  <details class="full"><summary>src/reading/state.cljc</summary>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/state.cljc">(ns reading.state
+  (:require [clojure.string :as str]))
+
+(def initial-state
+  {:draft ""
+   :show :all
+   :books []})
+
+(defn add-book [state]
+  (let [title (str/trim (:draft state))]
+    (if (str/blank? title)
+      state
+      (-> state
+          (update :books conj {:id (random-uuid)
+                               :title title
+                               :read? false})
+          (assoc :draft "")))))
+
+(defn toggle-read [state id]
+  (update state :books
+          (fn [books]
+            (mapv #(if (= id (:id %)) (update % :read? not) %) books))))
+
+(defn remove-book [state id]
+  (update state :books
+          (fn [books]
+            (filterv #(not= id (:id %)) books))))
+
+(defn visible-books [{:keys [books show]}]
+  (case show
+    :all books
+    :unread (remove :read? books)
+    :read (filter :read? books)))</script>
+  </details>
+  <details class="full"><summary>src/reading/ui.cljc</summary>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/ui.cljc">(ns reading.ui
+  (:require [reading.state :as state]
+            [replicant.alias :refer [defalias]]))
+
+(defalias progress [{::keys [done total]}]
+  [:div.progress
+   [:progress {:max total :value done}]
+   [:span (str done " of " total " read")]])
+
+(defn book-item [book]
+  [:li {:replicant/key (:id book)
+        :class (when (:read? book) "read")}
+   [:label
+    [:input {:type "checkbox"
+             :checked (:read? book)
+             :on {:change [[:action/toggle-read (:id book)]]}}]
+    " "
+    [:span (:title book)]]
+   [:button {:type "button"
+             :title "Remove"
+             :on {:click [[:action/remove-book (:id book)]]}}
+    "Remove"]])
+
+(defn filter-button [current value label]
+  [:button {:type "button"
+            :class (when (= current value) "active")
+            :on {:click [[:action/assoc-in [:show] value]]}}
+   label])
+
+(defn render-app [state]
+  (let [books (:books state)
+        visible (state/visible-books state)]
+    [:main.app
+     [:h1 "Reading list"]
+     [:form {:on {:submit [[:action/prevent-default]
+                           [:action/add-book]]}}
+      [:input {:type "text"
+               :placeholder "Add a book title"
+               :value (:draft state)
+               :replicant/on-mount (fn [{:replicant/keys [node]}]
+                                     (.focus node))
+               :on {:input [[:action/assoc-in [:draft] :event/target.value]]}}]
+      [:button {:type "submit"} "Add"]]
+     (when (seq books)
+       [progress {::done (count (filter :read? books))
+                  ::total (count books)}])
+     [:nav.filters
+      (filter-button (:show state) :all "All")
+      (filter-button (:show state) :unread "Unread")
+      (filter-button (:show state) :read "Read")]
+     (if (empty? visible)
+       [:p.empty "Nothing to show. Add a title above, or pick another filter."]
+       [:ul.books (map book-item visible)])]))</script>
+  </details>
+  <details class="full"><summary>src/reading/actions.cljs</summary>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/actions.cljs">(ns reading.actions
+  (:require [clojure.walk :as walk]
+            [reading.state :as state]))
+
+(defn interpolate
+  "Replace placeholders like :event/target.value with real values."
+  [event actions]
+  (walk/postwalk
+   (fn [x]
+     (case x
+       :event/target.value (.. event -target -value)
+       x))
+   actions))
+
+(defn perform! [store event [action & args]]
+  (case action
+    :action/prevent-default (.preventDefault event)
+    :action/assoc-in (let [[path value] args]
+                       (swap! store assoc-in path value))
+    :action/add-book (swap! store state/add-book)
+    :action/toggle-read (swap! store state/toggle-read (first args))
+    :action/remove-book (swap! store state/remove-book (first args))
+    (js/console.warn "Unknown action:" (pr-str action))))
+
+(defn handle! [store event actions]
+  (doseq [action (interpolate event actions)]
+    (perform! store event action)))</script>
+  </details>
+  <details class="full"><summary>src/reading/core.cljs</summary>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="src/reading/core.cljs">(ns reading.core
+  (:require [reading.actions :as actions]
+            [reading.state :as state]
+            [reading.ui :as ui]
+            [replicant.dom :as r]))
+
+;; The one atom. defonce keeps its value across hot reloads.
+(defonce store (atom state/initial-state))
+
+(defn render! [state]
+  (r/render (js/document.getElementById "app")
+            (ui/render-app state)))
+
+;; shadow-cljs calls this after every hot reload
+(defn ^:dev/after-load reload! []
+  (render! @store))
+
+(defn init []
+  (r/set-dispatch!
+   (fn [{:replicant/keys [trigger dom-event]} action-data]
+     (when (= trigger :replicant.trigger/dom-event)
+       (actions/handle! store dom-event action-data))))
+  (add-watch store ::render
+             (fn [_ _ _ new-state] (render! new-state)))
+  (render! @store))</script>
+  </details>
+  <details class="full"><summary>test/reading/state_test.cljs</summary>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/state_test.cljs">(ns reading.state-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.state :as state]))
+
+(deftest initial-state-test
+  (is (= [] (:books state/initial-state)))
+  (is (= "" (:draft state/initial-state)))
+  (is (= :all (:show state/initial-state))))
+
+(deftest add-book-test
+  (testing "adds the draft as an unread book and clears the draft"
+    (let [s (state/add-book (assoc state/initial-state :draft "Kindred"))]
+      (is (= "" (:draft s)))
+      (is (= [{:title "Kindred" :read? false}]
+             (map #(dissoc % :id) (:books s))))
+      (is (uuid? (:id (first (:books s)))))))
+  (testing "trims surrounding whitespace"
+    (is (= "Kindred"
+           (-> (assoc state/initial-state :draft "  Kindred ")
+               state/add-book :books first :title))))
+  (testing "ignores a blank draft: no book added, state unchanged"
+    (let [s (assoc state/initial-state :draft "   ")]
+      (is (= s (state/add-book s))))))
+
+(def two-books
+  (assoc state/initial-state
+         :books [{:id 1 :title "Kindred" :read? false}
+                 {:id 2 :title "Beloved" :read? true}]))
+
+(deftest toggle-read-test
+  (is (= [true true] (map :read? (:books (state/toggle-read two-books 1)))))
+  (is (= [false false] (map :read? (:books (state/toggle-read two-books 2))))))
+
+(deftest remove-book-test
+  (is (= ["Beloved"] (map :title (:books (state/remove-book two-books 1)))))
+  (is (= two-books (state/remove-book two-books 99)) "unknown ids change nothing"))
+
+(deftest visible-books-test
+  (is (= ["Kindred" "Beloved"] (map :title (state/visible-books two-books))))
+  (is (= ["Kindred"] (map :title (state/visible-books (assoc two-books :show :unread)))))
+  (is (= ["Beloved"] (map :title (state/visible-books (assoc two-books :show :read))))))</script>
+  </details>
+  <details class="full"><summary>test/reading/actions_test.cljs</summary>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/actions_test.cljs">(ns reading.actions-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.actions :as actions]
+            [reading.state :as state]))
+
+;; Just enough of a DOM event for interpolate and prevent-default
+(defn fake-event [value]
+  #js {:target #js {:value value}
+       :preventDefault (fn [])})
+
+(deftest interpolate-test
+  (is (= [[:action/assoc-in [:draft] "Kindred"]]
+         (actions/interpolate
+          (fake-event "Kindred")
+          [[:action/assoc-in [:draft] :event/target.value]]))))
+
+(deftest typing-then-submitting-adds-a-book
+  (let [store (atom state/initial-state)]
+    (actions/handle! store (fake-event "Kindred")
+                     [[:action/assoc-in [:draft] :event/target.value]])
+    (is (= "Kindred" (:draft @store)))
+    (actions/handle! store (fake-event nil)
+                     [[:action/prevent-default] [:action/add-book]])
+    (is (= ["Kindred"] (map :title (:books @store))))
+    (is (= "" (:draft @store)))))
+
+(deftest toggle-and-remove-test
+  (let [store (atom (assoc state/initial-state
+                           :books [{:id 1 :title "Kindred" :read? false}]))]
+    (actions/handle! store (fake-event nil) [[:action/toggle-read 1]])
+    (is (true? (:read? (first (:books @store)))))
+    (actions/handle! store (fake-event nil) [[:action/remove-book 1]])
+    (is (empty? (:books @store)))))</script>
+  </details>
+  <details class="full"><summary>test/reading/ui_test.cljs</summary>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/ui_test.cljs">(ns reading.ui-test
+  (:require [cljs.test :refer [deftest is testing]]
+            [reading.state :as state]
+            [reading.test-util :as tu]
+            [reading.ui :as ui]))
+
+(deftest form-test
+  (let [app (ui/render-app (assoc state/initial-state :draft "Kin"))
+        [form] (tu/find-tag app "form")
+        [input] (tu/find-tag app "input")]
+    (testing "submitting the form adds a book"
+      (is (= [[:action/prevent-default] [:action/add-book]]
+             (get-in (tu/attrs form) [:on :submit]))))
+    (testing "the input shows the draft and stores every keystroke"
+      (is (= "Kin" (:value (tu/attrs input))))
+      (is (= [[:action/assoc-in [:draft] :event/target.value]]
+             (get-in (tu/attrs input) [:on :input]))))))
+
+(deftest book-item-test
+  (let [li (ui/book-item {:id 42 :title "Kindred" :read? false})
+        [checkbox] (tu/find-tag li "input")
+        [button] (tu/find-tag li "button")]
+    (testing "each item is keyed by the book's id"
+      (is (= 42 (:replicant/key (tu/attrs li)))))
+    (testing "the controls send actions for this book"
+      (is (= [[:action/toggle-read 42]] (get-in (tu/attrs checkbox) [:on :change])))
+      (is (= [[:action/remove-book 42]] (get-in (tu/attrs button) [:on :click]))))
+    (testing "read books get the read class"
+      (is (nil? (:class (tu/attrs li))))
+      (is (= "read" (:class (tu/attrs (ui/book-item {:id 1 :title "x" :read? true}))))))))
+
+(def two-books
+  (assoc state/initial-state
+         :books [{:id 1 :title "Kindred" :read? false}
+                 {:id 2 :title "Beloved" :read? true}]))
+
+(deftest filter-button-test
+  (let [active (ui/filter-button :read :read "Read")
+        inactive (ui/filter-button :all :read "Read")]
+    (is (= "active" (:class (tu/attrs active))))
+    (is (nil? (:class (tu/attrs inactive))))
+    (is (= [[:action/assoc-in [:show] :read]] (get-in (tu/attrs active) [:on :click])))))
+
+(deftest only-visible-books-are-listed
+  (let [app (ui/render-app (assoc two-books :show :unread))]
+    (is (= ["Kindred"] (map tu/text (tu/find-tag app "span"))))))
+
+(deftest empty-message-when-nothing-matches
+  (let [app (ui/render-app (assoc two-books :show :read
+                                  :books [{:id 1 :title "Kindred" :read? false}]))]
+    (is (some #(= "Nothing to show. Add a title above, or pick another filter." (tu/text %))
+              (tu/find-tag app "p")))))
+
+(defn progress-nodes [app]
+  (filter #(= ui/progress (first %)) (tu/nodes app)))
+
+(deftest progress-test
+  (testing "hidden when there are no books"
+    (is (empty? (progress-nodes (ui/render-app state/initial-state)))))
+  (testing "counts read books out of all books"
+    (let [[p] (progress-nodes (ui/render-app two-books))]
+      (is (= {::ui/done 1 ::ui/total 2} (tu/attrs p))))))</script>
+  </details>
+  <details class="full"><summary>test/reading/test_util.cljs</summary>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="test/reading/test_util.cljs">(ns reading.test-util)
+
+(defn nodes
+  "Every hiccup element in a tree, depth first, including the root."
+  [hiccup]
+  (filter #(and (vector? %) (keyword? (first %)))
+          (tree-seq sequential? seq hiccup)))
+
+(defn attrs
+  "The attribute map of an element, or nil."
+  [node]
+  (let [a (second node)]
+    (when (map? a) a)))
+
+(defn tag-name
+  "The bare tag: :li.read#x becomes \"li\"."
+  [node]
+  (re-find #"^[^.#]+" (name (first node))))
+
+(defn find-tag [hiccup tag]
+  (filter #(= tag (tag-name %)) (nodes hiccup)))
+
+(defn text
+  "All the text inside an element, joined."
+  [node]
+  (apply str (filter #(or (string? %) (number? %))
+                     (tree-seq sequential? seq node))))</script>
+  </details>
+  <p>The finished suite has 14 tests. Notice where they sit: most are in <code>state</code>, where the logic is; <code>ui</code> tests check action data and visible content, not layout; <code>core</code> has none, and doesn't need any.</p>
+</article>
+
+<article class="step" data-step="15" id="step-15">
+  <div class="step-head"><span class="step-num">15</span><h2>Build for production</h2></div>
+  <p class="goal">Run the suite once from a clean start, then build an optimised bundle you can put on any static host.</p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="terminal" data-action="run"># first stop the watcher: Ctrl-c in the left pane
+npx shadow-cljs compile test    # compiles, then runs the tests once (:autorun)
+npx shadow-cljs release app</script>
+  <p>Stop the watcher first. While <code>watch app</code> is running, it rewrites <code>public/js/main.js</code> with a development build on every change, which would replace your release bundle.</p>
+  <h3>Preview the release build with Babashka</h3>
+  <p>The whole <code>public/</code> folder is now your deployable site. To look at it locally, you'll serve it with <a href="https://github.com/babashka/babashka">Babashka</a>, a Clojure scripting runtime that ships as a single native binary and starts in milliseconds. A small <code>bb.edn</code> file in the project gives you three short commands: <code>bb test</code>, <code>bb release</code> and <code>bb serve</code>.</p>
+
+  <h3>1. Install Babashka</h3>
+  <p>The official installer script downloads the right binary for your machine. By default it installs into <code>/usr/local/bin</code>, which needs <code>sudo</code>:</p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="terminal" data-action="run">cd ~
+curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
+chmod +x install
+sudo ./install
+rm install
+
+bb --version    # prints the installed version, e.g. babashka v1.x.x</script>
+  <p>If you'd rather not use <code>sudo</code>, install into your home directory instead with <code>./install --dir ~/.local/bin</code>. On Ubuntu that folder is on your <code>PATH</code> once it exists, though you may need to open a new terminal (or log out and in) before <code>bb</code> is found.</p>
+  <p>Babashka runs scripts without a JVM. The first time a project needs a library, it uses your Java install from step 1 to resolve the dependency, then caches it.</p>
+
+  <h3>2. Add a task file</h3>
+  <p>Create <code>bb.edn</code> in the project root, next to <code>shadow-cljs.edn</code>:</p>
+<script type="text/plain" class="snippet" data-lang="clj" data-file="bb.edn" data-action="new">{:deps {org.babashka/http-server {:mvn/version "0.1.14"}}
+
+ :tasks
+ {test    {:doc "Compile and run the test suite once"
+           :task (shell "npx shadow-cljs compile test")}
+
+  release {:doc "Run the tests, then build the optimised bundle"
+           :depends [test]
+           :task (shell "npx shadow-cljs release app")}
+
+  serve   {:doc "Serve public/ at http://localhost:8000"
+           :requires ([babashka.http-server :as server])
+           :task (server/exec {:port 8000 :dir "public"})}}}</script>
+  <p>Here's what each part does:</p>
+  <ul class="plain">
+  <li><code>:deps</code> works like <code>:dependencies</code> in <code>shadow-cljs.edn</code>: it adds <a href="https://github.com/babashka/http-server">babashka/http-server</a>, a small static file server library.</li>
+  <li><code>:tasks</code> defines named commands you run as <code>bb &lt;name&gt;</code>. <code>:doc</code> is the description <code>bb tasks</code> prints.</li>
+  <li><code>shell</code> runs a terminal command and stops the task if that command fails. Because <code>release</code> lists <code>test</code> under <code>:depends</code>, a failing test stops the build before it starts.</li>
+  <li><code>serve</code> requires the server namespace and calls <code>server/exec</code> with the port and the folder to serve.</li>
+  </ul>
+
+  <h3>3. Build and serve</h3>
+  <p>Make sure the watcher is stopped (see above), then check that Babashka sees your tasks:</p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="terminal" data-action="run">bb tasks</script>
+<script type="text/plain" class="snippet" data-lang="txt" data-file="expected output">The following tasks are available:
+
+test    Compile and run the test suite once
+release Run the tests, then build the optimised bundle
+serve   Serve public/ at http://localhost:8000</script>
+  <p>Build, then serve:</p>
+<script type="text/plain" class="snippet" data-lang="sh" data-file="terminal" data-action="run">bb release    # runs the tests, then the release build
+bb serve</script>
+  <p>The first <code>bb serve</code> takes a few seconds while it downloads the server library; after that it starts instantly. When it prints a line like <code>Serving assets at http://localhost:8000</code>, open <a href="http://localhost:8000/index.html">http://localhost:8000/index.html</a>. You're now looking at the optimised build. Press Ctrl-c to stop the server.</p>
+  <div class="note"><p><strong>If something goes wrong.</strong> <code>bb: command not found</code> means the folder you installed into isn't on your <code>PATH</code> yet; open a new terminal, or check with <code>ls /usr/local/bin/bb</code> or <code>ls ~/.local/bin/bb</code>. An "address already in use" error means another server holds port 8000; change <code>:port</code> in <code>bb.edn</code>. If the page still behaves like the development build, the watcher was running during <code>bb release</code>; stop it and run <code>bb release</code> again.</p></div>
+  <p>When you're done, stop <code>bb serve</code> and restart <code>npx shadow-cljs watch app test</code> to carry on developing; it replaces the release bundle with a development build again.</p>
+  <div class="note"><p>The one-off <code>compile test</code>, or <code>bb test</code>, is what you'd run in continuous integration: it exits with an error if any test fails. Replicant's development asserts are left out of release builds, so they cost nothing in production.</p></div>
+</article>
+
+</div>
+
+<section id="trouble">
+<h2 class="concept">When something breaks</h2>
+<dl class="trouble">
+<dt>The page is blank</dt>
+<dd>Open the browser console. Check that <code>index.html</code> has <code>&lt;div id="app"&gt;</code> and that the watcher says <code>Build completed</code> with no warnings.</dd>
+<dt>Clicking does nothing</dt>
+<dd>Handlers that are data need <code>set-dispatch!</code>. If you added it to <code>init</code> after the page loaded, refresh once. Look for "Unknown action" in the console: a typo in an action keyword lands there.</dd>
+<dt>Java or version errors when starting shadow-cljs</dt>
+<dd>Recent shadow-cljs releases need a recent JDK. <code>java -version</code> should report 21 or newer.</dd>
+<dt>A warning about the attribute map</dt>
+<dd>Somewhere you wrote <code>[:tag (when ... {...}) ...]</code>. Always pass the map and make its values conditional.</dd>
+<dt>No test output appears in the watcher pane</dt>
+<dd>Start the watcher with both builds: <code>npx shadow-cljs watch app test</code>. Check that <code>shadow-cljs.edn</code> lists <code>"test"</code> in <code>:source-paths</code> and has <code>:autorun true</code>, and restart after changing it.</dd>
+<dt>"Use of undeclared Var" in a test file</dt>
+<dd>The test calls a function from a namespace its <code>ns</code> form doesn't require, or the function isn't written yet (which is expected while a test is red). Compare the <code>ns</code> form with the matching file in step 14.</dd>
+<dt>A test namespace is silently skipped</dt>
+<dd>Its name must end in <code>-test</code>, and its file name uses underscores: <code>reading.ui-test</code> lives in <code>test/reading/ui_test.cljs</code>.</dd>
+<dt>The REPL runs an old version of a test</dt>
+<dd>Require it again with <code>:reload</code> before calling <code>run-tests</code>.</dd>
+<dt>List items behave strangely after removing one</dt>
+<dd>Missing or non-unique <code>:replicant/key</code>. Use the item's id, never its index.</dd>
+</dl>
+</section>
+
+<section id="next">
+<h2 class="concept">Where to go next</h2>
+<ul class="plain">
+<li>The official guide at <a href="https://replicant.fun">replicant.fun</a>, especially its tutorials on routing, forms and integrating JavaScript libraries.</li>
+<li>API reference on <a href="https://cljdoc.org/d/no.cjohansen/replicant/">cljdoc</a>.</li>
+<li>Try it yourself: save <code>store</code> to <code>localStorage</code> in the watch, render <code>reading.ui/render-app</code> to an HTML string with <code>replicant.string</code>, or add an undo button by keeping a history of states in <code>core</code>.</li>
+</ul>
+</section>
+
+<footer>Written for Replicant 2026.07.1 and shadow-cljs. Replicant is by Christian Johansen, MIT licensed.</footer>
+</div>
+</main>
+</div>
+
+<script>
+(function(){
+  /* ---------- storage (guarded) ---------- */
+  var KEY = "replicant-course-progress-v1";
+  function load(){ try { var v = localStorage.getItem(KEY); return v ? JSON.parse(v) : {}; } catch(e){ return {}; } }
+  function save(p){ try { localStorage.setItem(KEY, JSON.stringify(p)); } catch(e){} }
+
+  /* ---------- syntax highlighting ---------- */
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function hlClj(src){
+    var re = /(;[^\n]*)|("(?:[^"\\]|\\.)*")|(::?[A-Za-z][\w.\-\/?!*+<>=]*)|([()\[\]{}])/g;
+    var out = "", last = 0, m;
+    while ((m = re.exec(src))) {
+      out += esc(src.slice(last, m.index));
+      var cls = m[1] ? "tk-c" : m[2] ? "tk-s" : m[3] ? "tk-k" : "tk-p";
+      out += '<span class="' + cls + '">' + esc(m[0]) + "</span>";
+      last = re.lastIndex;
+    }
+    return out + esc(src.slice(last));
+  }
+  function hlSh(src){
+    return src.split("\n").map(function(line){
+      var i = line.indexOf("#");
+      if (i === -1) return esc(line);
+      return esc(line.slice(0,i)) + '<span class="tk-c">' + esc(line.slice(i)) + "</span>";
+    }).join("\n");
+  }
+
+  document.querySelectorAll("script.snippet").forEach(function(s){
+    var src = s.textContent.replace(/^\n/, "").replace(/\s+$/, "").replace(/<\\\//g, "</");
+    var lang = s.dataset.lang;
+    var fig = document.createElement("figure");
+    fig.className = "code";
+    var cap = document.createElement("figcaption");
+    var label = document.createElement("span");
+    label.className = "cap";
+    var path = document.createElement("span");
+    path.className = "path";
+    path.textContent = s.dataset.file || (lang === "clj" ? "clojure" : lang);
+    label.appendChild(path);
+    var actions = { "new": "New file", "replace": "Replace whole file", "run": "Run", "repl": "REPL" };
+    if (s.dataset.action && actions[s.dataset.action]) {
+      var badge = document.createElement("span");
+      badge.className = "badge " + s.dataset.action;
+      badge.textContent = actions[s.dataset.action];
+      label.appendChild(badge);
+    }
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "copy"; btn.textContent = "Copy";
+    btn.addEventListener("click", function(){
+      var done = function(){ btn.textContent = "Copied"; setTimeout(function(){ btn.textContent = "Copy"; }, 1400); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(src).then(done, function(){ btn.textContent = "Select and copy"; });
+      } else { btn.textContent = "Select and copy"; }
+    });
+    cap.appendChild(label); cap.appendChild(btn);
+    var pre = document.createElement("pre");
+    pre.tabIndex = 0;
+    pre.innerHTML = lang === "clj" ? hlClj(src) : lang === "sh" ? hlSh(src) : esc(src);
+    fig.appendChild(cap); fig.appendChild(pre);
+    s.replaceWith(fig);
+  });
+
+  /* ---------- step checklist ---------- */
+  var progress = load();
+  var steps = Array.prototype.slice.call(document.querySelectorAll("article.step"));
+  var tocSteps = document.getElementById("tocSteps");
+  var tocItems = {};
+
+  steps.forEach(function(step){
+    var n = step.dataset.step;
+    var title = step.querySelector("h2").textContent;
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.href = "#step-" + n;
+    a.innerHTML = '<span class="n">' + (n.length < 2 ? "0" + n : n) + "</span><span></span>";
+    a.lastChild.textContent = title;
+    li.appendChild(a); tocSteps.appendChild(li);
+    tocItems[n] = li;
+
+    var label = document.createElement("label");
+    label.className = "done-toggle";
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!progress[n];
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode("Done"));
+    step.querySelector(".step-head").appendChild(label);
+    cb.addEventListener("change", function(){
+      if (cb.checked) progress[n] = true; else delete progress[n];
+      save(progress); paint();
+    });
+    step._cb = cb;
+  });
+
+  function paint(){
+    var done = 0;
+    steps.forEach(function(step){
+      var n = step.dataset.step, on = !!progress[n];
+      if (on) done++;
+      step.classList.toggle("is-done", on);
+      step._cb.checked = on;
+      tocItems[n].classList.toggle("done", on);
+    });
+    document.getElementById("meterFill").style.width = (done / steps.length * 100) + "%";
+    document.getElementById("meterText").textContent =
+      done === steps.length ? "All " + steps.length + " steps done. Nicely built." :
+      done + " of " + steps.length + " steps done";
+  }
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    progress = {}; save(progress); paint();
+  });
+  paint();
+
+  /* ---------- hero demo: state -> hiccup -> DOM ---------- */
+  var titles = ["Things Fall Apart","Beloved","The Dispossessed","Invisible Man","Middlemarch","Kindred","Pedro Paramo","Frankenstein"];
+  var state = { books: [ {id:1,title:"Kindred",read:false}, {id:2,title:"Middlemarch",read:true} ] };
+  var nextId = 3, ti = 0;
+  var domList = document.getElementById("dDom");
+  var nodes = {};  // id -> {el, read, title}
+
+  function stateText(){
+    if (!state.books.length) return "{:books []}";
+    return "{:books\n [" + state.books.map(function(b,i){
+      return (i ? "  " : "") + '{:id ' + b.id + ' :title "' + b.title + '" :read? ' + b.read + "}";
+    }).join("\n") + "]}";
+  }
+  function hicText(){
+    var lines = ['[:ul.books'];
+    state.books.forEach(function(b){
+      lines.push('  [:li {:replicant/key ' + b.id + (b.read ? ' :class "read"' : '') + '}');
+      lines.push('   "' + b.title + '"]');
+    });
+    if (!state.books.length) lines[0] += "]"; else lines[lines.length-1] += "]";
+    return lines.join("\n");
+  }
+
+  function flash(el){
+    el.classList.remove("touched"); void el.offsetWidth; el.classList.add("touched");
+  }
+
+  function reconcile(first){
+    var created = 0, changed = 0, removed = 0, untouched = 0;
+    var seen = {};
+    state.books.forEach(function(b, idx){
+      seen[b.id] = true;
+      var n = nodes[b.id];
+      if (!n) {
+        var li = document.createElement("li");
+        li.textContent = b.title;
+        li.classList.toggle("read", b.read);
+        n = nodes[b.id] = { el: li, read: b.read };
+        created++; if (!first) flash(li);
+      } else if (n.read !== b.read) {
+        n.el.classList.toggle("read", b.read); n.read = b.read;
+        changed++; flash(n.el);
+      } else { untouched++; }
+      if (domList.children[idx] !== n.el) domList.insertBefore(n.el, domList.children[idx] || null);
+    });
+    Object.keys(nodes).forEach(function(id){
+      if (!seen[id]) { nodes[id].el.remove(); delete nodes[id]; removed++; }
+    });
+    document.getElementById("dState").innerHTML = hlClj(stateText());
+    document.getElementById("dHic").innerHTML = hlClj(hicText());
+    var r = document.getElementById("dReport");
+    if (first) { r.innerHTML = "First render: built <strong>" + created + "</strong> list items from scratch."; return; }
+    var parts = [];
+    if (created) parts.push("created <strong>" + created + "</strong>");
+    if (changed) parts.push("changed <strong>" + changed + "</strong>");
+    if (removed) parts.push("removed <strong>" + removed + "</strong>");
+    r.innerHTML = (parts.length ? "Replicant " + parts.join(", ") + " node" + (created+changed+removed === 1 ? "" : "s") : "Nothing changed, so Replicant touched nothing") +
+      ". It left <strong>" + untouched + "</strong> alone.";
+  }
+
+  document.getElementById("dAdd").addEventListener("click", function(){
+    if (state.books.length >= 8) { document.getElementById("dReport").textContent = "The demo list is full. Remove a book first."; return; }
+    state = { books: state.books.concat([{ id: nextId++, title: titles[ti++ % titles.length], read: false }]) };
+    reconcile(false);
+  });
+  document.getElementById("dToggle").addEventListener("click", function(){
+    if (!state.books.length) return;
+    state = { books: state.books.map(function(b,i){ return i === 0 ? {id:b.id,title:b.title,read:!b.read} : b; }) };
+    reconcile(false);
+  });
+  document.getElementById("dRemove").addEventListener("click", function(){
+    if (!state.books.length) return;
+    state = { books: state.books.slice(0, -1) };
+    reconcile(false);
+  });
+  reconcile(true);
+})();
+</script>
+</body>
+</html>

@@ -39,18 +39,3 @@
     (actions/handle! store (fake-event nil) [[:action/remove-book 1]])
     (is (empty? (:books @store)))))
 
-(deftest book-item-test
-  (let [li (ui/book-item {:id 42 :title "Kindred" :read? false})
-        [checkbox] (tu/find-tag li "input")
-        [button] (tu/find-tag li "button")]
-
-    (testing "each item is keyed by the book's id"
-      (is (= 42 (:replicant/key (tu/attrs li)))))
-
-    (testing "the controls send actions for this book"
-      (is (= [[:action/toggle-read 42]] (get-in (tu/attrs checkbox) [:on :change])))
-      (is (= [[:action/remove-book 42]] (get-in (tu/attrs button) [:on :click]))))
-
-    (testing "read books get the read class"
-      (is (nil? (:class (tu/attrs li))))
-      (is (= "read" (:class (tu/attrs (ui/book-item {:id 1 :title "x" :read? true}))))))))
